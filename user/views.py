@@ -5,33 +5,37 @@ from django.utils.decorators import method_decorator
 from django_ratelimit.decorators import ratelimit
 from rest_framework.response import Response
 from rest_framework import status
-from drf_yasg.utils import swagger_auto_schema
-from drf_yasg import openapi
+from .models import User
+from rest_framework.permissions import AllowAny
+import json
+import requests
+import os
+from space_api import settings
 
+
+# captcha
 class CaptchaViewset(APIView) :
+    permission_classes = [AllowAny]
     @method_decorator(ratelimit(key='ip', rate='5/m', method='GET', block=True))
-    @swagger_auto_schema(
-        operation_description="برای ایجاد کپچا",
-        request_body=openapi.Schema(
-            type=openapi.TYPE_OBJECT,
-            properties={
-                'phone': openapi.Schema(type=openapi.TYPE_STRING, description='شماره تلفن کاربر'),
-            }
-        ),
-        responses={
-            200: 'پیام موفقیت',
-            400: 'خطای اعتبارسنجی'
-        }
-    )
     def get (self,request):
         captcha = GuardPyCaptcha ()
         captcha = captcha.Captcha_generation(num_char=4 , only_num= True)
         return Response ({'captcha' : captcha} , status = status.HTTP_200_OK)
 
+# otp sejam
 class OtpSejamViewset(APIView):
     permission_classes = [AllowAny]
-    # @method_decorator(ratelimit(key='ip', rate='5/m', method='POST', block=True))
+    @method_decorator(ratelimit(key='ip', rate='5/m', method='POST', block=True))
     def post(self, request):
+        encrypted_response = request.data['encrypted_response'].encode()
+        if isinstance(encrypted_response, str):
+            encrypted_response = encrypted_response.encode('utf-8')
+        captcha = GuardPyCaptcha()
+
+        captcha = captcha.check_response(encrypted_response, request.data['captcha'])
+        if request.data['captcha'] == ''  or not captcha :
+            pass#return Response ({'message' : 'کد کپچا خالی است'} , status=status.HTTP_400_BAD_REQUEST)
+
         uniqueIdentifier = request.data['uniqueIdentifier']
         if not uniqueIdentifier :
             return Response ({'message' : 'کد ملی را وارد کنید'} , status=status.HTTP_400_BAD_REQUEST)
@@ -53,7 +57,7 @@ class OtpSejamViewset(APIView):
         return Response({'message' : 'اطلاعات شما یافت نشد'},status=status.HTTP_400_BAD_REQUEST)   
                 
 
-
+# register  user's account for new user
 class RegisterViewset(APIView):
     def post(self, request):
         
