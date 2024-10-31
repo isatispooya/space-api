@@ -29,5 +29,32 @@ class CaptchaViewset(APIView) :
         return Response ({'captcha' : captcha} , status = status.HTTP_200_OK)
 
 class OtpSejamViewset(APIView):
-    
-    pass
+    permission_classes = [AllowAny]
+    # @method_decorator(ratelimit(key='ip', rate='5/m', method='POST', block=True))
+    def post(self, request):
+        uniqueIdentifier = request.data['uniqueIdentifier']
+        if not uniqueIdentifier :
+            return Response ({'message' : 'کد ملی را وارد کنید'} , status=status.HTTP_400_BAD_REQUEST)
+        user = User.objects.filter (uniqueIdentifier = uniqueIdentifier).first()
+        if not user:
+            url = "http://31.40.4.92:8870/otp"
+            payload = json.dumps({
+            "uniqueIdentifier": uniqueIdentifier
+            })
+            headers = {
+            'X-API-KEY': os.getenv('X-API-KEY'),
+            'Content-Type': 'application/json'
+            }
+            response = requests.request("POST", url, headers=headers, data=payload)
+            if response.status_code >=300 :
+                return Response ({'message' :'شما سجامی نیستید'} , status=status.HTTP_400_BAD_REQUEST)
+            return Response ({'registered' :False , 'message' : 'کد تایید ارسال شد'},status=status.HTTP_200_OK)
+
+        return Response({'message' : 'اطلاعات شما یافت نشد'},status=status.HTTP_400_BAD_REQUEST)   
+                
+
+
+class RegisterViewset(APIView):
+    def post(self, request):
+        
+        return Response(True, status=status.HTTP_201_CREATED)

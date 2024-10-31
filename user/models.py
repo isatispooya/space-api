@@ -23,7 +23,7 @@ class User(models.Model):
     last_login = models.DateTimeField(null=True, blank=True)
     status = models.BooleanField(default=True)
     bio = models.TextField(blank=True, null=True)
-    national_id = models.CharField(max_length=10)
+    uniqueIdentifier = models.CharField(max_length=10)
     chat_id_telegram = models.CharField(max_length=255, null=True, blank=True)
     last_password_change = models.DateTimeField(null=True, blank=True)
     login_attempts = models.IntegerField(default=0) 
@@ -116,3 +116,10 @@ class JobInfo(models.Model):
 
 
 
+class Otp(models.Model):
+    code = models.CharField(max_length=6)
+    mobile = models.CharField(max_length=14)
+
+
+    def __str__(self):
+        return f"{self.mobile} - {self.code}"
