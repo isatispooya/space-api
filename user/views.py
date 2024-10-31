@@ -5,9 +5,24 @@ from django.utils.decorators import method_decorator
 from django_ratelimit.decorators import ratelimit
 from rest_framework.response import Response
 from rest_framework import status
+from drf_yasg.utils import swagger_auto_schema
+from drf_yasg import openapi
 
 class CaptchaViewset(APIView) :
     @method_decorator(ratelimit(key='ip', rate='5/m', method='GET', block=True))
+    @swagger_auto_schema(
+        operation_description="برای ایجاد کپچا",
+        request_body=openapi.Schema(
+            type=openapi.TYPE_OBJECT,
+            properties={
+                'phone': openapi.Schema(type=openapi.TYPE_STRING, description='شماره تلفن کاربر'),
+            }
+        ),
+        responses={
+            200: 'پیام موفقیت',
+            400: 'خطای اعتبارسنجی'
+        }
+    )
     def get (self,request):
         captcha = GuardPyCaptcha ()
         captcha = captcha.Captcha_generation(num_char=4 , only_num= True)
