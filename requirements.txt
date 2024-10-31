@@ -5,3 +5,4 @@ drf-yasg
 django-rest-framework
 ratelimit
 GuardPyCaptcha
+django-ratelimit
