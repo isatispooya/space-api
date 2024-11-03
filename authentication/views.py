@@ -6,7 +6,12 @@ from django_ratelimit.decorators import ratelimit
 from GuardPyCaptcha.Captch import GuardPyCaptcha
 from rest_framework.response import Response
 from rest_framework import status
-
+from user import fun
+from user.models import User
+from rest_framework_simplejwt.views import TokenObtainPairView
+from rest_framework.response import Response
+from rest_framework import status
+from django.contrib.auth import authenticate
 # Create your views here.
 
 class CaptchaViewset(APIView) :
@@ -18,14 +23,27 @@ class CaptchaViewset(APIView) :
         return Response ({'captcha' : captcha} , status = status.HTTP_200_OK)
     
 
-class LoginViewset(APIView):
-    permission_classes = [AllowAny]
-    def post(self, request):
-        print(request.data)
-        user = User.objects.filter(username=request.data.get('username')).first()
-        if not user:
-            return Response({'error': 'User not found'}, status=status.HTTP_404_NOT_FOUND)
-        if not user.check_password(request.data.get('password')):
-            return Response({'error': 'Invalid password'}, status=status.HTTP_400_BAD_REQUEST)
-        token = fun.encryptionUser(user)
-        return Response({'access': token}, status=status.HTTP_200_OK)
+class CustomTokenObtainPairView(TokenObtainPairView):
+    def post(self, request, *args, **kwargs):
+        username = request.data.get('username')
+        password = request.data.get('password')
+
+        print(username,password)
+        
+        # تلاش برای احراز هویت
+        user = authenticate(username=username, password=password)
+        print(user)
+        
+        if user is None:
+            return Response(
+                {
+                    "detail": "اطلاعات کاربری نادرست است",
+                    "debug_info": {
+                        "username_received": username,
+                        "password_received": "***"
+                    }
+                },
+                status=status.HTTP_401_UNAUTHORIZED
+            )
+            
+        return super().post(request, *args, **kwargs) 
