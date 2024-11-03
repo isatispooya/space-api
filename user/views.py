@@ -13,15 +13,8 @@ import os
 from space_api import settings
 from django.utils import timezone
 from . import fun
-import datetime
+from .date import parse_date
 
-
-def parse_date(date_str):
-    try:
-        # تبدیل تاریخ به فرمت YYYY-MM-DD
-        return datetime.datetime.strptime(date_str, "%Y-%m-%dT%H:%M:%S").date()
-    except (ValueError, TypeError):
-        return None
 # captcha
 class CaptchaViewset(APIView) :
     permission_classes = [AllowAny]
@@ -77,35 +70,7 @@ class RegisterViewset(APIView):
 
         if not uniqueIdentifier or not otp:
             return Response({'message': 'کد ملی و کد تأیید الزامی است'}, status=status.HTTP_400_BAD_REQUEST)
-        # try:
-        #     user = User.objects.get(uniqueIdentifier=uniqueIdentifier)
-        #     # if user.is_locked():
-        #          return Response({'message': 'حساب شما قفل است، لطفاً بعد از مدتی دوباره تلاش کنید.'}, status=status.HTTP_429_TOO_MANY_REQUESTS)
-        # except  :
-        #     pass
-        # if user : 
-        #     try:
-        #         mobile = user.mobile
-        #         otp_obj = Otp.objects.filter(mobile=mobile , code = otp ).order_by('-date').first()
-        #         if otp_obj is None:
-        #             user.attempts += 1  
-        #             if user.attempts >= 3:
-        #                 user.lock() 
-        #                 return Response({'message': 'تعداد تلاش‌های شما بیش از حد مجاز است. حساب شما برای 5 دقیقه قفل شد.'}, status=status.HTTP_429_TOO_MANY_REQUESTS)
-
-        #             user.save()  
-        #             return Response({'message': 'کد تأیید اشتباه است'}, status=status.HTTP_400_BAD_REQUEST)
-
-        #         if otp_obj.expire and timezone.now() > otp_obj.expire:
-        #             return Response({'message': 'زمان کد منقضی شده است'}, status=status.HTTP_400_BAD_REQUEST)
-
-        #     except Exception as e:
-        #         return Response({'message': 'کد تأیید نامعتبر است'}, status=status.HTTP_400_BAD_REQUEST)
-        #     user.attempts = 0
-        #     user.save()
-        #     otp_obj.delete()
-        #     token = fun.encryptionUser(user)
-        #     return Response({'access': token}, status=status.HTTP_200_OK)
+        
         if not user :
             url = "http://31.40.4.92:8870/information"
             payload = json.dumps({
@@ -128,41 +93,7 @@ class RegisterViewset(APIView):
             new_user = User.objects.filter(uniqueIdentifier=uniqueIdentifier).first()
             private_person_data = data['privatePerson']
             if  not new_user :
-                # new_user  =User(
-                #     username = data['uniqueIdentifier'],    
-                #     email = data['email'],
-                #     password = data['uniqueIdentifier'],
-                #     is_active = None,
-                #     first_name = data['firstName'],
-                #     last_name = data['lastName'],
-                #     mobile = data['mobile'],
-                #     gender = data['gender'],
-                #     birth_date = data['birthDate'],
-                #     created_at = data['createdAt'],
-                #     updated_at = data['updatedAt'],
-                #     address = data['address'],
-                #     profile_image = data['profileImage'],
-                #     last_login = data['lastLogin'],
-                #     status = data['status'],
-                #     bio = data['bio'],
-                #     uniqueIdentifier = data['uniqueIdentifier'],
-                #     chat_id_telegram = data['chatIdTelegram'],
-                #     last_password_change = data['lastPasswordChange'],
-                #     login_attempts = data['loginAttempts'],
-                #     seri_shenasname = data['seriSh'],
-                #     seri_shenasname_char = data['seriShChar'],
-                #     serial_shenasname = data['serial'],
-                #     place_of_birth = data['placeOfBirth'],
-                #     place_of_issue = data['placeOfIssue'],
-                #     father_name = data['fatherName'],
-                #     education_level = data['educationLevel'],
-                #     marital_status = data['maritalStatus'],
-                    
-                # )
-                # new_user.save()
-                
-                
-
+               
                 new_user = User(
                     username=data.get('uniqueIdentifier'),
                     email=data.get('email'),
@@ -172,7 +103,7 @@ class RegisterViewset(APIView):
                     last_name=private_person_data.get('lastName'),
                     mobile=data.get('mobile'),
                     gender='M' if private_person_data.get('gender') == 'Male' else 'F' if private_person_data.get('gender') == 'Female' else None,
-                    birth_date=parse_date(private_person_data.get('birthDate')),  # تبدیل تاریخ به فرمت صحیح
+                    birth_date=parse_date(private_person_data.get('birthDate')),  
                     created_at=parse_date(data.get('createdAt')),
                     updated_at=parse_date(data.get('updatedAt')),
                     address=data['addresses'][0].get('remnantAddress') if data.get('addresses') and len(data['addresses']) > 0 else None,
