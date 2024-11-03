@@ -34,6 +34,7 @@ class User(AbstractUser):
     place_of_birth = models.CharField(max_length=255, null=True, blank=True)
     place_of_issue = models.CharField(max_length=255, null=True, blank=True)
     father_name = models.CharField(max_length=255, null=True, blank=True)
+    date_joined = models.DateTimeField(auto_now_add=True)
 
     EDUCATION_LEVELS = [
     ('highschool', 'دیپلم'),
@@ -58,6 +59,9 @@ class User(AbstractUser):
         related_name='custom_user_permissions_set',
         blank=True,
     )
+
+    is_superuser = models.BooleanField(default=False)
+    is_staff = models.BooleanField(default=False)
 
     def __str__(self):
         return self.username
