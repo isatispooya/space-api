@@ -6,7 +6,8 @@ from django_ratelimit.decorators import ratelimit
 from GuardPyCaptcha.Captch import GuardPyCaptcha
 from rest_framework.response import Response
 from rest_framework import status
-
+from user.models import User
+from user import fun
 # Create your views here.
 
 class CaptchaViewset(APIView) :
