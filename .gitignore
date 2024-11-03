@@ -39,3 +39,4 @@ ENV/
 .vscode/
 *.swp
 *.swo
+migrations/

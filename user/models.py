@@ -1,4 +1,5 @@
 from django.db import models
+from django.contrib.auth.models import AbstractUser
 
 class Gender(models.TextChoices):
     MALE = 'M', 'مرد'
@@ -6,10 +7,10 @@ class Gender(models.TextChoices):
     OTHER = 'O', 'دیگر'
 
 
-class User(models.Model):
+class User(AbstractUser):
     username = models.CharField(max_length=255, unique=True)
     email = models.EmailField(unique=True , null=True , blank=True)
-    password = models.CharField(max_length=255)
+    password = models.TextField()
     is_active = models.BooleanField(default=True)
     first_name = models.CharField(max_length=255)
     last_name = models.CharField(max_length=255)
@@ -47,6 +48,16 @@ class User(models.Model):
     ]
     marital_status = models.CharField(max_length=15, choices=MARITAL_STATUS, blank=True, null=True)
 
+    groups = models.ManyToManyField(
+        'auth.Group',
+        related_name='custom_user_set',
+        blank=True,
+    )
+    user_permissions = models.ManyToManyField(
+        'auth.Permission',
+        related_name='custom_user_permissions_set',
+        blank=True,
+    )
 
     def __str__(self):
         return self.username

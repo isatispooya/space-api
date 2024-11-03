@@ -6,3 +6,4 @@ django-rest-framework
 ratelimit
 GuardPyCaptcha
 django-ratelimit
+djangorestframework-simplejwt

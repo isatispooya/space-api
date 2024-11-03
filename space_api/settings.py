@@ -7,6 +7,7 @@ load_dotenv()
 
 BASE_DIR = Path(__file__).resolve().parent.parent
 
+AUTH_USER_MODEL = 'user.User'
 
 
 SECRET_KEY = os.getenv('SECRET_KEY')
@@ -25,6 +26,7 @@ INSTALLED_APPS = [
     'django.contrib.messages',
     'django.contrib.staticfiles',
     'rest_framework',
+    'authentication',
     'user',
 ]
 
@@ -40,6 +42,8 @@ MIDDLEWARE = [
 ]
 
 ROOT_URLCONF = 'space_api.urls'
+
+
 
 REST_FRAMEWORK = {
     'DEFAULT_AUTHENTICATION_CLASSES': (
@@ -151,3 +155,4 @@ SESSION_COOKIE_SECURE = os.getenv('DEBUG', 'False') != 'True'
 #         },
 #     },
 # }
+

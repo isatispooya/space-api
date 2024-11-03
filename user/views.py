@@ -6,7 +6,7 @@ from django_ratelimit.decorators import ratelimit
 from rest_framework.response import Response
 from rest_framework import status
 from .models import User , Otp , legalPersonStakeholders , legalPersonShareholders , AgentUser,  LegalPerson , JobInfo , Addresses ,Accounts    
-from rest_framework.permissions import AllowAny
+from rest_framework.permissions import AllowAny,IsAuthenticated
 import json
 import requests
 import os
@@ -16,13 +16,6 @@ from . import fun
 from .date import parse_date
 
 # captcha
-class CaptchaViewset(APIView) :
-    permission_classes = [AllowAny]
-    @method_decorator(ratelimit(key='ip', rate='5/m', method='GET', block=True))
-    def get (self,request):
-        captcha = GuardPyCaptcha ()
-        captcha = captcha.Captcha_generation(num_char=4 , only_num= True)
-        return Response ({'captcha' : captcha} , status = status.HTTP_200_OK)
 
 # otp sejam
 class OtpSejamViewset(APIView):
@@ -242,4 +235,15 @@ class RegisterViewset(APIView):
 
             token = fun.encryptionUser(new_user)
 
-            return Response({'message': data , 'access' : ''} , status=status.HTTP_200_OK)
+            return Response({'message': data , 'access' : token} , status=status.HTTP_200_OK)
+
+
+
+#update user password
+class ChangePasswordViewset(APIView):
+    permission_classes = [IsAuthenticated]
+    @method_decorator(ratelimit(key='ip', rate='5/m', method='POST', block=True))
+    def patch(self, request):
+        user = request.user
+        print(user)
+        return Response(True, status=status.HTTP_200_OK)
