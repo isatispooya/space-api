@@ -1,5 +1,6 @@
 from django.db import models
 from django.contrib.auth.models import AbstractUser
+import uuid
 
 class Gender(models.TextChoices):
     MALE = 'M', 'مرد'
@@ -190,4 +191,12 @@ class legalPersonStakeholders (models.Model):
     is_owner_signature = models.CharField( max_length=150 , null=True , blank= True)
     first_name = models.CharField( max_length=150 , null=True , blank= True)
     end_at = models.CharField( max_length=150 , null=True , blank= True)
+
+
+
+class UUid(models.Model):
+    user = models.ForeignKey(User, on_delete=models.CASCADE)
+    uuid = models.UUIDField(default=uuid.uuid4, editable=False, unique=True) 
+    status = models.BooleanField(default=True)
+    expire = models.DateTimeField(null=True, blank=True)   
 

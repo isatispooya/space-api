@@ -63,3 +63,9 @@ class legalPersonStakeholdersSerializer(serializers.ModelSerializer):
         model = models.legalPersonStakeholders
         fields = '__all__'
 
+
+class UUidSerializer(serializers.ModelSerializer):
+    class Meta :
+        model = models.UUid
+        fields = '__all__'
+

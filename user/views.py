@@ -5,7 +5,7 @@ from django.utils.decorators import method_decorator
 from django_ratelimit.decorators import ratelimit
 from rest_framework.response import Response
 from rest_framework import status
-from .models import User , Otp , legalPersonStakeholders , legalPersonShareholders , AgentUser,  LegalPerson , JobInfo , Addresses ,Accounts    
+from .models import User , Otp , legalPersonStakeholders , legalPersonShareholders , AgentUser,  LegalPerson , JobInfo , Addresses ,Accounts , UUid
 from rest_framework.permissions import AllowAny,IsAuthenticated
 import json
 import requests
@@ -13,7 +13,10 @@ import os
 from space_api import settings
 from django.utils import timezone
 from . import fun
+from .serializers import UUidSerializer
 from .date import parse_date
+from datetime import timedelta
+from uuid import uuid4
 
 # captcha
 
@@ -49,7 +52,7 @@ class OtpSejamViewset(APIView):
                 return Response ({'message' :'شما سجامی نیستید'} , status=status.HTTP_400_BAD_REQUEST)
             return Response ({'registered' :False , 'message' : 'کد تایید ارسال شد'},status=status.HTTP_200_OK)
 
-        return Response({'message' : 'اطلاعات شما یافت نشد'},status=status.HTTP_400_BAD_REQUEST)   
+        return Response({'message' : 'شما قبلا ثبت نام کرده اید'},status=status.HTTP_400_BAD_REQUEST)   
                 
 
 # register  user's account for new user
@@ -90,7 +93,6 @@ class RegisterViewset(APIView):
                 new_user = User(
                     username=data.get('uniqueIdentifier'),
                     email=data.get('email'),
-                    password=data.get('uniqueIdentifier'),
                     is_active=True,
                     first_name=private_person_data.get('firstName'),
                     last_name=private_person_data.get('lastName'),
@@ -117,7 +119,7 @@ class RegisterViewset(APIView):
                     education_level=None,
                     marital_status=None,
                 )
-
+                new_user.set_password(data.get('uniqueIdentifier'))
                 new_user.save()
                     
             if len(data['legalPersonStakeholders']) > 0:
@@ -245,5 +247,90 @@ class ChangePasswordViewset(APIView):
     @method_decorator(ratelimit(key='ip', rate='5/m', method='POST', block=True))
     def patch(self, request):
         user = request.user
-        print(user)
-        return Response(True, status=status.HTTP_200_OK)
+        last_password = request.data.get('last_password')
+        new_password = request.data.get('new_password')
+        new_password_confirm = request.data.get('new_password_confirm')
+        if not last_password or not new_password or not new_password_confirm:
+            return Response({'message': 'اطلاعات وارد شده نادرست است'}, status=status.HTTP_400_BAD_REQUEST)
+        if new_password != new_password_confirm:
+            return Response({'message': 'رمز عبور وارد شده با تکرار آن مطابقت ندارد'}, status=status.HTTP_400_BAD_REQUEST)
+        if not user.check_password(last_password):
+            return Response({'message': 'رمز عبور قبلی وارد شده اشتباه است'}, status=status.HTTP_400_BAD_REQUEST)
+        user.set_password(new_password)
+        user.last_password_change = timezone.now()
+        user.save()
+        return Response({'message': 'رمز عبور با موفقیت تغییر یافت'}, status=status.HTTP_200_OK)
+    
+
+
+frm ='30001526'
+usrnm = 'isatispooya'
+psswrd ='5246043adeleh'
+
+# sms for uuid
+def SendSms(snd,txt):
+    txt = f'اتوماسیون اداری ایساتیس پویا\n فراموشی رمز عبور:\n https://isatispooya.com/{txt}/'
+    resp = requests.get(url=f'http://tsms.ir/url/tsmshttp.php?from={frm}&to={snd}&username={usrnm}&password={psswrd}&message={txt}').json()
+    print(txt)
+    return resp
+
+
+
+class ForgotPasswordViewset(APIView):
+    permission_classes = [IsAuthenticated]
+    @method_decorator(ratelimit(key='ip', rate='5/m', method='POST', block=True))
+    def post(self, request):
+        user = request.user
+        mobile = user.mobile
+        expire = timezone.now() + timedelta(minutes=10)
+
+        uuid_create, created = UUid.objects.update_or_create(user=user,defaults={'uuid': uuid4(),'expire': expire, 'status': False})
+             
+        if not uuid_create.uuid:
+            uuid_create.uuid = uuid4()
+            uuid_create.save()
+
+        uuid_serializer = UUidSerializer(uuid_create).data
+        uuid = uuid_serializer['uuid']
+        print(uuid)
+        
+        SendSms(mobile, uuid)
+
+        if created:
+            uuid_create.status = True
+            uuid_create.save()
+            return Response({'message': 'کد تایید ارسال شد'}, status=status.HTTP_200_OK)
+
+        return Response({'message': 'کد تایید ارسال شد'}, status=status.HTTP_200_OK)
+
+
+    def patch(self, request):
+        user = request.user
+        uuid = request.query_params.get('uuid')
+        if not uuid:
+            return Response({'message': 'کد تایید وارد نشده است'}, status=status.HTTP_400_BAD_REQUEST)
+        
+        uuid_obj = UUid.objects.filter(uuid=uuid, user=user, status=False, expire__gte=timezone.now()).first()
+        print(uuid_obj)
+        
+        if not uuid_obj:
+            return Response({'message': 'کد تایید اشتباه است یا منقضی شده است'}, status=status.HTTP_400_BAD_REQUEST)
+
+        # بررسی صحت رمز عبور
+        new_password = request.data.get('new_password')
+        new_password_confirm = request.data.get('new_password_confirm')
+        if not new_password or not new_password_confirm or new_password != new_password_confirm:
+            return Response({'message': 'رمز عبور وارد شده با تکرار آن مطابقت ندارد'}, status=status.HTTP_400_BAD_REQUEST)
+
+        # تنظیم رمز عبور جدید
+        user.set_password(new_password)
+        user.last_password_change = timezone.now()
+        user.save()
+        
+        # به‌روزرسانی وضعیت uuid_obj به true پس از استفاده
+        uuid_obj.status = True
+        uuid_obj.save()
+        
+        return Response({'message': 'رمز عبور با موفقیت تغییر یافت'}, status=status.HTTP_200_OK)
+
+
