@@ -28,11 +28,10 @@ class CustomTokenObtainPairView(TokenObtainPairView):
         username = request.data.get('username')
         password = request.data.get('password')
 
-        print(username,password)
+        user = User.objects.get(username=username)
         
         # تلاش برای احراز هویت
         user = authenticate(username=username, password=password)
-        print(user)
         
         if user is None:
             return Response(
