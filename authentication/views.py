@@ -10,8 +10,8 @@ from rest_framework import status
 from rest_framework import viewsets, status
 from rest_framework.permissions import IsAdminUser
 from rest_framework.response import Response
-from django.contrib.auth.models import Group
-from .serializer import GroupSerializer
+from django.contrib.auth.models import Group , Permission
+from .serializer import GroupSerializer , PermissionSerializer
 
 
 class CaptchaViewset(APIView) :
@@ -67,3 +67,13 @@ class GroupManagementViewSet(viewsets.ModelViewSet):
                 status=status.HTTP_400_BAD_REQUEST
             )
         
+
+
+class PermissionListView(APIView):
+    permission_classes = [IsAdminUser]
+    def get(self, request):
+        # دریافت تمام مجوزها
+        permissions = Permission.objects.all()
+        # سریالایز کردن داده‌ها
+        serializer = PermissionSerializer(permissions, many=True)
+        return Response(serializer.data)

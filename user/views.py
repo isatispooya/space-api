@@ -6,7 +6,7 @@ from django_ratelimit.decorators import ratelimit
 from rest_framework.response import Response
 from rest_framework import status
 from .models import User , Otp , legalPersonStakeholders , legalPersonShareholders , AgentUser,  LegalPerson , JobInfo , Addresses ,Accounts , UUid
-from rest_framework.permissions import AllowAny,IsAuthenticated
+from rest_framework.permissions import AllowAny,IsAuthenticated , IsAdminUser
 import json
 import requests
 import os
@@ -367,3 +367,16 @@ class ProfileViewset(APIView):
         }
         
         return Response( combined_data,status=status.HTTP_200_OK)
+
+
+# all users for admin
+class UserViewset(APIView):
+    permission_classes = [IsAdminUser]
+    def get(self, request):
+        user = request.user
+        user = User.objects.all()
+        user_serializer = UserSerializer(user, many=True)
+        return Response(user_serializer.data,status=status.HTTP_200_OK)
+    
+
+    
