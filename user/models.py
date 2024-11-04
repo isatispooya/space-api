@@ -143,7 +143,7 @@ class Otp(models.Model):
         return f"{self.mobile} - {self.code}"
 
 
-class AgentUser : 
+class AgentUser (models.Model): 
     user = models.ForeignKey(User, on_delete=models.CASCADE)
     description = models.TextField(null=True, blank=True)
     expiration_date = models.CharField(max_length=150, null=True, blank=True)
