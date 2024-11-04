@@ -13,12 +13,12 @@ import os
 from space_api import settings
 from django.utils import timezone
 from . import fun
-from .serializers import UUidSerializer
+from .serializers import UUidSerializer , UserSerializer , AccountsSerializer , AddressesSerializer , JobInfoSerializer , AgentUserSerializer ,LegalPersonSerializer , legalPersonShareholdersSerializer , legalPersonStakeholdersSerializer
 from .date import parse_date
 from datetime import timedelta
 from uuid import uuid4
-
-# captcha
+from utils.legal import is_legal_person
+from utils.sms import SendSmsUUid
 
 # otp sejam
 class OtpSejamViewset(APIView):
@@ -240,7 +240,6 @@ class RegisterViewset(APIView):
             return Response({'message': data , 'access' : token} , status=status.HTTP_200_OK)
 
 
-
 #update user password
 class ChangePasswordViewset(APIView):
     permission_classes = [IsAuthenticated]
@@ -262,20 +261,7 @@ class ChangePasswordViewset(APIView):
         return Response({'message': 'رمز عبور با موفقیت تغییر یافت'}, status=status.HTTP_200_OK)
     
 
-
-frm ='30001526'
-usrnm = 'isatispooya'
-psswrd ='5246043adeleh'
-
-# sms for uuid
-def SendSms(snd,txt):
-    txt = f'اتوماسیون اداری ایساتیس پویا\n فراموشی رمز عبور:\n https://isatispooya.com/{txt}/'
-    resp = requests.get(url=f'http://tsms.ir/url/tsmshttp.php?from={frm}&to={snd}&username={usrnm}&password={psswrd}&message={txt}').json()
-    print(txt)
-    return resp
-
-
-
+# forgot password
 class ForgotPasswordViewset(APIView):
     permission_classes = [IsAuthenticated]
     @method_decorator(ratelimit(key='ip', rate='5/m', method='POST', block=True))
@@ -294,7 +280,7 @@ class ForgotPasswordViewset(APIView):
         uuid = uuid_serializer['uuid']
         print(uuid)
         
-        SendSms(mobile, uuid)
+        SendSmsUUid(mobile, uuid)
 
         if created:
             uuid_create.status = True
@@ -316,21 +302,68 @@ class ForgotPasswordViewset(APIView):
         if not uuid_obj:
             return Response({'message': 'کد تایید اشتباه است یا منقضی شده است'}, status=status.HTTP_400_BAD_REQUEST)
 
-        # بررسی صحت رمز عبور
         new_password = request.data.get('new_password')
         new_password_confirm = request.data.get('new_password_confirm')
         if not new_password or not new_password_confirm or new_password != new_password_confirm:
             return Response({'message': 'رمز عبور وارد شده با تکرار آن مطابقت ندارد'}, status=status.HTTP_400_BAD_REQUEST)
 
-        # تنظیم رمز عبور جدید
         user.set_password(new_password)
         user.last_password_change = timezone.now()
         user.save()
         
-        # به‌روزرسانی وضعیت uuid_obj به true پس از استفاده
         uuid_obj.status = True
         uuid_obj.save()
         
         return Response({'message': 'رمز عبور با موفقیت تغییر یافت'}, status=status.HTTP_200_OK)
 
 
+# user profile
+class ProfileViewset(APIView):
+    permission_classes = [IsAuthenticated]
+    def get(self, request):
+        user = request.user
+       
+
+        user_serializer = UserSerializer(user).data
+
+        accounts = Accounts.objects.filter(user=user)
+        accounts_serializer = AccountsSerializer(accounts, many=True).data
+
+        addresses = Addresses.objects.filter(user=user)
+        addresses_serializer = AddressesSerializer(addresses, many=True).data
+
+        jobInfo = JobInfo.objects.filter(user=user).first()
+        jobInfo_serializer = JobInfoSerializer(jobInfo, many=False).data
+
+        if AgentUser.objects.filter(user=user) :
+            agentUser = AgentUser.objects.filter(user=user).first()
+            agentUser_serializer = AgentUserSerializer(agentUser, many=False).data
+        else :
+            agentUser_serializer = None
+
+        if is_legal_person(user) == True :
+            legal_person = LegalPerson.objects.filter(user=user).first()
+            legal_person_serializer = LegalPersonSerializer(legal_person, many=False).data
+
+            legal_person_shareholders = legalPersonShareholders.objects.filter(user=user)
+            legal_person_shareholders_serializer = legalPersonShareholdersSerializer(legal_person_shareholders, many=True).data
+
+            legal_person_stakeholders = legalPersonStakeholders.objects.filter(user=user)
+            legal_person_stakeholders_serializer = legalPersonStakeholdersSerializer(legal_person_stakeholders, many=True).data
+        else :
+            legal_person_serializer = None
+            legal_person_shareholders_serializer = None
+            legal_person_stakeholders_serializer = None
+
+        combined_data = {
+            **user_serializer,
+            'accounts' : accounts_serializer,
+            'addresses' : addresses_serializer,
+            'jobInfo' : jobInfo_serializer,
+            'agentUser' : agentUser_serializer,
+            'legal_person' : legal_person_serializer,
+            'legal_person_shareholders' : legal_person_shareholders_serializer,
+            'legal_person_stakeholders' : legal_person_stakeholders_serializer,
+        }
+        
+        return Response( combined_data,status=status.HTTP_200_OK)
