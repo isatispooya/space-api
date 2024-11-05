@@ -379,4 +379,54 @@ class UserViewset(APIView):
         return Response(user_serializer.data,status=status.HTTP_200_OK)
     
 
-    
+class UserDetailViewset(APIView):
+    permission_classes = [IsAdminUser]
+    def get(self, request, pk):
+        try:
+            user = User.objects.get(pk=pk)
+            user_serializer = UserSerializer(user).data
+
+            accounts = Accounts.objects.filter(user=user)
+            accounts_serializer = AccountsSerializer(accounts, many=True).data
+
+            addresses = Addresses.objects.filter(user=user)
+            addresses_serializer = AddressesSerializer(addresses, many=True).data
+
+            jobInfo = JobInfo.objects.filter(user=user).first()
+            jobInfo_serializer = JobInfoSerializer(jobInfo, many=False).data
+
+            if AgentUser.objects.filter(user=user) :
+                agentUser = AgentUser.objects.filter(user=user).first()
+                agentUser_serializer = AgentUserSerializer(agentUser, many=False).data
+            else :
+                agentUser_serializer = None
+
+            if is_legal_person(user) == True :
+                legal_person = LegalPerson.objects.filter(user=user).first()
+                legal_person_serializer = LegalPersonSerializer(legal_person, many=False).data
+
+                legal_person_shareholders = legalPersonShareholders.objects.filter(user=user)
+                legal_person_shareholders_serializer = legalPersonShareholdersSerializer(legal_person_shareholders, many=True).data
+
+                legal_person_stakeholders = legalPersonStakeholders.objects.filter(user=user)
+                legal_person_stakeholders_serializer = legalPersonStakeholdersSerializer(legal_person_stakeholders, many=True).data
+            else :
+                legal_person_serializer = None
+                legal_person_shareholders_serializer = None
+                legal_person_stakeholders_serializer = None
+
+            combined_data = {
+                **user_serializer,
+                'accounts' : accounts_serializer,
+                'addresses' : addresses_serializer,
+                'jobInfo' : jobInfo_serializer,
+                'agentUser' : agentUser_serializer,
+                'legal_person' : legal_person_serializer,
+                'legal_person_shareholders' : legal_person_shareholders_serializer,
+                'legal_person_stakeholders' : legal_person_stakeholders_serializer,
+            }
+        
+            return Response( combined_data,status=status.HTTP_200_OK)
+        
+        except User.DoesNotExist:
+            return Response({'message': 'کاربر یافت نشد'}, status=status.HTTP_404_NOT_FOUND)
