@@ -11,8 +11,7 @@ from rest_framework import viewsets, status
 from rest_framework.permissions import IsAdminUser
 from rest_framework.response import Response
 from django.contrib.auth.models import Group , Permission
-from .serializer import GroupSerializer , PermissionSerializer
-
+from .serializer import GroupSerializer
 
 class CaptchaViewset(APIView) :
     permission_classes = [AllowAny]
@@ -69,10 +68,3 @@ class GroupManagementViewSet(viewsets.ModelViewSet):
         
 
 
-class PermissionListView(APIView):
-    permission_classes = [IsAdminUser]
-    def get(self, request):
-        permissions = Permission.objects.all()
-        serializer = PermissionSerializer(permissions, many=True)
-        return Response(serializer.data)
-    

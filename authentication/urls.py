@@ -1,4 +1,4 @@
-from .views import  CaptchaViewset, GroupManagementViewSet , PermissionListView
+from .views import  CaptchaViewset, GroupManagementViewSet
 from django.urls import path
 from rest_framework_simplejwt.views import (
     TokenObtainPairView,
@@ -20,7 +20,6 @@ urlpatterns = [
         'patch': 'partial_update',
         'delete': 'destroy'
     }), name='group-detail'),
-    path('permissions/', PermissionListView.as_view(), name='permission-list'),
 ]
 
 
