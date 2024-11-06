@@ -9,4 +9,5 @@ urlpatterns = [
     path('' , include('user.urls')),
     path('' , include('authentication.urls')),
     path('' , include('access.urls')),
+    path('' , include('companies.urls')),
 ]

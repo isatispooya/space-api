@@ -18,8 +18,7 @@ from datetime import timedelta
 from uuid import uuid4
 from utils.legal import is_legal_person
 from utils.sms import SendSmsUUid
-from rest_framework_simplejwt.tokens import RefreshToken  # اضافه کردن این خط
-
+from rest_framework_simplejwt.tokens import RefreshToken 
 
 # otp sejam
 class OtpSejamViewset(APIView):

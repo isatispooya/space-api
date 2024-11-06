@@ -28,6 +28,8 @@ INSTALLED_APPS = [
     'rest_framework',
     'authentication',
     'user',
+    'companies',
+
 ]
 
 MIDDLEWARE = [
