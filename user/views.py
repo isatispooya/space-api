@@ -12,13 +12,14 @@ import requests
 import os
 from space_api import settings
 from django.utils import timezone
-from . import fun
 from .serializers import UUidSerializer , UserSerializer , AccountsSerializer , AddressesSerializer , JobInfoSerializer , AgentUserSerializer ,LegalPersonSerializer , legalPersonShareholdersSerializer , legalPersonStakeholdersSerializer
 from .date import parse_date
 from datetime import timedelta
 from uuid import uuid4
 from utils.legal import is_legal_person
 from utils.sms import SendSmsUUid
+from rest_framework_simplejwt.tokens import RefreshToken  # اضافه کردن این خط
+
 
 # otp sejam
 class OtpSejamViewset(APIView):
@@ -88,7 +89,7 @@ class RegisterViewset(APIView):
                 return Response({'message' :'بیشتر تلاش کن '}, status=status.HTTP_400_BAD_REQUEST)
             new_user = User.objects.filter(uniqueIdentifier=uniqueIdentifier).first()
             private_person_data = data['privatePerson']
-            if  not new_user :
+            if not new_user :
                
                 new_user = User(
                     username=data.get('uniqueIdentifier'),
@@ -234,10 +235,10 @@ class RegisterViewset(APIView):
                     )
 
                     new_agent.save()
-
-            token = fun.encryptionUser(new_user)
-
-            return Response({'message': data , 'access' : token} , status=status.HTTP_200_OK)
+            
+            refresh = RefreshToken.for_user(new_user)
+            access = str(refresh.access_token)
+            return Response({'refresh': str(refresh), 'access':access}, status=status.HTTP_200_OK)
 
 
 #update user password
