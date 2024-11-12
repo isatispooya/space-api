@@ -17,7 +17,7 @@ class User(AbstractUser):
     last_name = models.CharField(max_length=255)
     mobile = models.CharField(max_length=13)
     gender = models.CharField(max_length=1, choices=Gender.choices, default=Gender.OTHER)
-    birth_date = models.DateField()
+    birth_date = models.DateField(null=True, blank=True)
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
     address = models.TextField()

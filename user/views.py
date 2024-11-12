@@ -201,6 +201,11 @@ class RegisterViewset(APIView):
                     new_addresses.save()
                 jobInfo_data = data.get('jobInfo')
                 if isinstance(jobInfo_data, dict):
+                    employment_date = request.data.get('employmentDate')
+                    if employment_date is not None:
+
+                        employment_date = employment_date.split('T')[0]  # 1346 the date format
+
                     new_jobInfo = JobInfo(
                         user=new_user,
                         company_address=jobInfo_data.get('companyAddress', ''),
@@ -212,7 +217,7 @@ class RegisterViewset(APIView):
                         company_phone=jobInfo_data.get('companyPhone', ''),
                         company_postal_code=jobInfo_data.get('companyPostalCode', ''),
                         company_web_site=jobInfo_data.get('companyWebSite', ''),
-                        employment_date=jobInfo_data.get('employmentDate', ''),
+                        employment_date=employment_date,
                         job_title=jobInfo_data.get('job', {}).get('title', ''),
                         job_description=jobInfo_data.get('jobDescription', ''),
                         position=jobInfo_data.get('position', ''),
