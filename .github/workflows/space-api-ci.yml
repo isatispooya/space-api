@@ -29,10 +29,6 @@ jobs:
           SERVER_HOST: "31.40.4.92"
           SERVER_DIR: "/var/www/space/api/"
         run: |
-          mkdir -p ~/.ssh
-          echo "$SSH_PRIVATE_KEY" > ~/.ssh/id_rsa
-          chmod 600 ~/.ssh/id_rsa
-          ssh-keyscan -H $SERVER_HOST >> ~/.ssh/known_hosts
           
           ssh $SERVER_USER@$SERVER_HOST << 'EOF'
             cd $SERVER_DIR
