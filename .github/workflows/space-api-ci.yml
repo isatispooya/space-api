@@ -28,7 +28,7 @@ jobs:
           SERVER_USER: "root"
           SERVER_HOST: "31.40.4.92"
           SERVER_PORT: "2233"
-          SERVER_DIR: "/var/www/space/api/"
+          SERVER_DIR: "/var/www/space/api/space-api/"
         run: |
           mkdir -p ~/.ssh
           echo "$SSH_PRIVATE_KEY" > ~/.ssh/id_rsa
