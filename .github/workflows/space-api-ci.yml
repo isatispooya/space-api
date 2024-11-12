@@ -35,6 +35,9 @@ jobs:
           chmod 600 ~/.ssh/id_rsa
           ssh-keyscan -p $SERVER_PORT -H $SERVER_HOST >> ~/.ssh/known_hosts
           
+          echo "Testing SSH connection..."
+          ssh -p $SERVER_PORT -o StrictHostKeyChecking=no $SERVER_USER@$SERVER_HOST "echo 'SSH connection successful!'"
+
           ssh -p $SERVER_PORT $SERVER_USER@$SERVER_HOST << 'EOF'
             cd $SERVER_DIR
             git pull origin main
