@@ -12,3 +12,4 @@ class PositionViewset(viewsets.ModelViewSet):
     queryset = Position.objects.all()
     serializer_class = PositionSerializer
     permission_classes = [IsAuthenticated]
+
