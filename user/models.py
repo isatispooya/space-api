@@ -35,7 +35,6 @@ class User(AbstractUser):
     place_of_birth = models.CharField(max_length=255, null=True, blank=True)
     place_of_issue = models.CharField(max_length=255, null=True, blank=True)
     father_name = models.CharField(max_length=255, null=True, blank=True)
-    date_joined = models.DateTimeField(default=timezone.now)
 
     EDUCATION_LEVELS = [
     ('highschool', 'دیپلم'),
