@@ -28,7 +28,7 @@ jobs:
           SERVER_USER: "root"
           SERVER_HOST: "31.40.4.92"
           SERVER_PORT: "2233"
-          SERVER_DIR: "/var/www/space/api/"
+          SERVER_DIR: "/var/www/space/api"
         run: |
           mkdir -p ~/.ssh
           echo "$SSH_PRIVATE_KEY" > ~/.ssh/id_rsa
@@ -36,15 +36,20 @@ jobs:
           ssh-keyscan -p $SERVER_PORT -H $SERVER_HOST >> ~/.ssh/known_hosts
           
           ssh -p $SERVER_PORT $SERVER_USER@$SERVER_HOST << EOF
+            rm -rf $SERVER_DIR
+            mkdir -p $SERVER_DIR
             cd $SERVER_DIR || { echo "Failed to navigate to server directory"; exit 1; }
-
-            if [ ! -d ".git" ]; then
-              git clone https://github.com/isatispooya/space-api.git .
-            else
-              git pull origin main || { echo "Git pull failed"; exit 1; }
-            fi
-
-            pip install -r requirements.txt || { echo "Failed to install requirements"; exit 1; }
+            
+            git clone https://github.com/isatispooya/space-api.git . || { echo "Git clone failed"; exit 1; }
+            
+            apt-get update && apt-get install -y python3-pip
+            python3 -m pip install --upgrade pip
+            python3 -m pip install -r requirements.txt --root-user-action=ignore
+            
+            python3 -m pip install -r requirements.txt || { echo "Failed to install requirements"; exit 1; }
+            
             python3 manage.py makemigrations || { echo "makemigrations failed"; exit 1; }
             python3 manage.py migrate || { echo "migrate failed"; exit 1; }
+            
+            chown -R www-data:www-data $SERVER_DIR
           EOF
