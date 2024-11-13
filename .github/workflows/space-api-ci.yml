@@ -44,6 +44,7 @@ jobs:
             
             apt-get update && apt-get install -y python3-pip
             python3 -m pip install --upgrade pip
+            python3 -m pip install -r requirements.txt --root-user-action=ignore
             
             python3 -m pip install -r requirements.txt || { echo "Failed to install requirements"; exit 1; }
             
