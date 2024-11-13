@@ -38,18 +38,21 @@ jobs:
           ssh -p $SERVER_PORT $SERVER_USER@$SERVER_HOST << EOF
             rm -rf $SERVER_DIR
             mkdir -p $SERVER_DIR
-            cd $SERVER_DIR || { echo "Failed to navigate to server directory"; exit 1; }
-            
-            git clone https://github.com/isatispooya/space-api.git . || { echo "Git clone failed"; exit 1; }
+            cd $SERVER_DIR
+            git clone https://github.com/isatispooya/space-api.git . || { echo "Git clone failed "; exit 1; }
             
             apt-get update && apt-get install -y python3-pip
             python3 -m pip install --upgrade pip
             python3 -m pip install -r requirements.txt --root-user-action=ignore
             
-            python3 -m pip install -r requirements.txt || { echo "Failed to install requirements"; exit 1; }
-            
             python3 manage.py makemigrations || { echo "makemigrations failed"; exit 1; }
             python3 manage.py migrate || { echo "migrate failed"; exit 1; }
             
             chown -R www-data:www-data $SERVER_DIR
+            python3 manage.py collectstatic --noinput || { echo "collectstatic failed"; exit 1; }
+            
+            systemctl restart space-api || { echo "Failed to restart service"; exit 1; }
+            systemctl status space-api --no-pager
+            
+            echo "Deployment completed successfully!"
           EOF
