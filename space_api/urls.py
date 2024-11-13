@@ -16,7 +16,6 @@ urlpatterns = [
     path('' , include('authentication.urls')),
     path('' , include('access.urls')),
     path('' , include('companies.urls')),
-    path('' , include('positions.urls')),
     path('' , include(router.urls)),
 ]
 if settings.DEBUG:
