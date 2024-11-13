@@ -1,7 +1,7 @@
 from django.db import models
 from django.contrib.auth.models import AbstractUser
 import uuid
-
+from django.utils import timezone
 class Gender(models.TextChoices):
     MALE = 'M', 'مرد'
     FEMALE = 'F', 'زن'
@@ -35,7 +35,7 @@ class User(AbstractUser):
     place_of_birth = models.CharField(max_length=255, null=True, blank=True)
     place_of_issue = models.CharField(max_length=255, null=True, blank=True)
     father_name = models.CharField(max_length=255, null=True, blank=True)
-    date_joined = models.DateTimeField(auto_now_add=True)
+    date_joined = models.DateTimeField(auto_now_add=True,default=timezone.now)
 
     EDUCATION_LEVELS = [
     ('highschool', 'دیپلم'),
