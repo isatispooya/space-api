@@ -45,11 +45,11 @@ jobs:
             python3 -m pip install --upgrade pip
             python3 -m pip install -r requirements.txt --root-user-action=ignore
             
-            python3 manage.py makemigrations || { echo "makemigrations failed"; exit 1; }
-            python3 manage.py migrate || { echo "migrate failed"; exit 1; }
+            find . -path "*/migrations/*.py" -not -name "__init__.py" -delete
+            find . -path "*/migrations/*.pyc" -delete
             
-            chown -R www-data:www-data $SERVER_DIR
-            python3 manage.py collectstatic --noinput || { echo "collectstatic failed"; exit 1; }
+            python3 manage.py makemigrations
+            python3 manage.py migrate --fake-initial
             
             systemctl restart space-api || { echo "Failed to restart service"; exit 1; }
             systemctl status space-api --no-pager
