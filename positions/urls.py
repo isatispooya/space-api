@@ -1,7 +1,3 @@
 from django.urls import path
-from .views import PositionViewset
+from . import views
 
-
-urlpatterns = [
-    path('positions/', PositionViewset.as_view(), name='position'),
-]

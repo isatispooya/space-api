@@ -36,7 +36,8 @@ INSTALLED_APPS = [
     'authentication',
     'user',
     'companies',
-    'positions'
+    'positions',
+    'correspondence',
 
 ]
 
