@@ -50,6 +50,11 @@ jobs:
             
             python3 manage.py makemigrations
             python3 manage.py migrate --fake-initial
+            mkdir -p static media static_files
+            
+            chown -R www-data:www-data static media
+            chmod -R 755 static media
+            python3 manage.py collectstatic --noinput
             
             systemctl restart space-api || { echo "Failed to restart service"; exit 1; }
             systemctl status space-api --no-pager

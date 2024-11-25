@@ -170,4 +170,9 @@ SESSION_COOKIE_SECURE = os.getenv('DEBUG', 'False') != 'True'
 #     },
 # }
 
+# اضافه کردن STATICFILES_DIRS برای پوشه‌های استاتیک اضافی
+STATICFILES_DIRS = [
+    os.path.join(BASE_DIR, 'static_files'),
+]
+
 
