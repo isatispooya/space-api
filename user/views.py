@@ -5,20 +5,21 @@ from django.utils.decorators import method_decorator
 from django_ratelimit.decorators import ratelimit
 from rest_framework.response import Response
 from rest_framework import status
-from .models import User , Otp , legalPersonStakeholders , legalPersonShareholders , AgentUser,  LegalPerson , JobInfo , Addresses ,Accounts , UUid
+from .models import User , Otp , legalPersonStakeholders , legalPersonShareholders , AgentUser,  LegalPerson , JobInfo , Addresses ,Accounts , UUid , CodeForgotPassword
 from rest_framework.permissions import AllowAny,IsAuthenticated , IsAdminUser
 import json
 import requests
 import os
 from space_api import settings
 from django.utils import timezone
-from .serializers import UUidSerializer , UserSerializer , AccountsSerializer , AddressesSerializer , JobInfoSerializer , AgentUserSerializer ,LegalPersonSerializer , legalPersonShareholdersSerializer , legalPersonStakeholdersSerializer
+from .serializers import UUidSerializer , UserSerializer , AccountsSerializer , AddressesSerializer , JobInfoSerializer , AgentUserSerializer ,LegalPersonSerializer , legalPersonShareholdersSerializer , legalPersonStakeholdersSerializer , CodeForgotPasswordSerializer
 from .date import parse_date
 from datetime import timedelta
 from uuid import uuid4
 from utils.legal import is_legal_person
-from utils.sms import SendSmsUUid
+from utils.sms import SendSmsCode
 from rest_framework_simplejwt.tokens import RefreshToken 
+import random
 
 # otp sejam
 class OtpSejamViewset(APIView):
@@ -268,45 +269,39 @@ class ChangePasswordViewset(APIView):
 
 # forgot password
 class ForgotPasswordViewset(APIView):
-    permission_classes = [IsAuthenticated]
+    permission_classes = [AllowAny]
     @method_decorator(ratelimit(key='ip', rate='5/m', method='POST', block=True))
     def post(self, request):
-        user = request.user
+        uniqueIdentifier = request.data.get('uniqueIdentifier')
+        user = User.objects.filter(uniqueIdentifier=uniqueIdentifier).first()
         mobile = user.mobile
         expire = timezone.now() + timedelta(minutes=10)
-
-        uuid_create, created = UUid.objects.update_or_create(user=user,defaults={'uuid': uuid4(),'expire': expire, 'status': False})
-             
-        if not uuid_create.uuid:
-            uuid_create.uuid = uuid4()
-            uuid_create.save()
-
-        uuid_serializer = UUidSerializer(uuid_create).data
-        uuid = uuid_serializer['uuid']
-        print(uuid)
+        code_create, created = CodeForgotPassword.objects.update_or_create(user=user,defaults={'code': random.randint(100000, 999999),'expire': expire, 'status': False})
+        serializer = CodeForgotPasswordSerializer(code_create).data
+        print(serializer['code'])
+        code = serializer['code']
         
-        SendSmsUUid(mobile, uuid)
-
+        SendSmsCode(mobile, code)
+        
         if created:
-            uuid_create.status = True
-            uuid_create.save()
+            code_create.status = True
+            code_create.save()
             return Response({'message': 'کد تایید ارسال شد'}, status=status.HTTP_200_OK)
 
         return Response({'message': 'کد تایید ارسال شد'}, status=status.HTTP_200_OK)
 
 
     def patch(self, request):
-        user = request.user
-        uuid = request.query_params.get('uuid')
-        if not uuid:
+        code = request.data.get('code')
+        if not code:
             return Response({'message': 'کد تایید وارد نشده است'}, status=status.HTTP_400_BAD_REQUEST)
         
-        uuid_obj = UUid.objects.filter(uuid=uuid, user=user, status=False, expire__gte=timezone.now()).first()
-        print(uuid_obj)
-        
-        if not uuid_obj:
-            return Response({'message': 'کد تایید اشتباه است یا منقضی شده است'}, status=status.HTTP_400_BAD_REQUEST)
+        code_obj = CodeForgotPassword.objects .filter(code=code,status=False, expire__gte=timezone.now()).first()
+        print(code_obj)
 
+        if not code_obj:
+            return Response({'message': 'کد تایید اشتباه است یا منقضی شده است'}, status=status.HTTP_400_BAD_REQUEST)
+        user = code_obj.user
         new_password = request.data.get('new_password')
         new_password_confirm = request.data.get('new_password_confirm')
         if not new_password or not new_password_confirm or new_password != new_password_confirm:
@@ -316,8 +311,8 @@ class ForgotPasswordViewset(APIView):
         user.last_password_change = timezone.now()
         user.save()
         
-        uuid_obj.status = True
-        uuid_obj.save()
+        code_obj.status = True
+        code_obj.save()
         
         return Response({'message': 'رمز عبور با موفقیت تغییر یافت'}, status=status.HTTP_200_OK)
 

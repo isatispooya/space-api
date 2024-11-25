@@ -14,6 +14,12 @@ class UserSerializer(serializers.ModelSerializer):
         fields = '__all__'
 
 
+class CodeForgotPasswordSerializer(serializers.ModelSerializer):
+    class Meta :
+        model = models.CodeForgotPassword
+        fields = '__all__'
+
+
 class AccountsSerializer(serializers.ModelSerializer):
     class Meta :
         model = models.Accounts

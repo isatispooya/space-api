@@ -1,6 +1,9 @@
 from django.db import models
 from companies.models import Company
 from user.models import User
+
+
+
 class Position(models.Model):
     name = models.CharField(max_length=200)
     description = models.TextField(null=True , blank=True)
