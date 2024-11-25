@@ -15,6 +15,7 @@ SECRET_KEY = os.getenv('SECRET_KEY')
 DEBUG = True#os.getenv('DEBUG', 'False') == 'True'
 
 ALLOWED_HOSTS = os.getenv('ALLOWED_HOSTS', '').split(',')
+
 CORS_ALLOW_ALL_ORIGINS = True
 
 CORS_ALLOW_METHODS = [
