@@ -139,9 +139,9 @@ USE_TZ = True
 BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 
 STATIC_URL = '/static/'
-STATIC_ROOT = str(BASE_DIR / 'static')
+STATIC_ROOT = os.path.join(BASE_DIR, 'static')
 MEDIA_URL = '/media/'
-MEDIA_ROOT = str(BASE_DIR / 'media')
+MEDIA_ROOT = os.path.join(BASE_DIR, 'media')
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 
 # Security settings
@@ -172,7 +172,7 @@ SESSION_COOKIE_SECURE = os.getenv('DEBUG', 'False') != 'True'
 
 # اضافه کردن STATICFILES_DIRS برای پوشه‌های استاتیک اضافی
 STATICFILES_DIRS = [
-    BASE_DIR / 'static_files',
+    os.path.join(BASE_DIR, 'static_files'),
 ]
 
 

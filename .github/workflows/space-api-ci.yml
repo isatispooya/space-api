@@ -56,7 +56,16 @@ jobs:
             chmod -R 755 static media
             python3 manage.py collectstatic --noinput
             
-            systemctl restart space-api || { echo "Failed to restart service"; exit 1; }
+            mkdir -p /var/log/gunicorn
+            chown -R www-data:www-data /var/log/gunicorn
+            
+            chown -R www-data:www-data $SERVER_DIR
+            chmod -R 755 $SERVER_DIR
+            
+            systemctl daemon-reload
+            sleep 5
+            systemctl restart space-api
+            sleep 5
             systemctl status space-api --no-pager
             
             echo "Deployment completed successfully!"
