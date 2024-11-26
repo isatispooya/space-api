@@ -1,4 +1,5 @@
 from django.db import models
+from django.core.validators import FileExtensionValidator
 
 
 
@@ -42,20 +43,21 @@ class Company(models.Model):
     company_type = models.CharField(max_length=100,
         verbose_name="نوع شرکت",
         choices=[
-            ('private', 'سهامی خاص'),
-            ('public', 'سهامی عام'),
-            ('limited', 'مسئولیت محدود'),
-            ('cooperative', 'تضامنی'),
-            ('mixed', 'مختلط غیر سهامی'),
-            ('mixed_stock', 'مختلط سهامی'),
-            ('proportional', 'نسبی'),
-            ('production_coop', 'تعاونی تولید و مصرف'),
+            ('private_joint_stock', 'سهامی خاص'),
+            ('public_joint_stock', 'سهامی عام'),
+            ('limited_liability', 'مسئولیت محدود'),
+            ('general_partnership', 'تضامنی'),
+            ('non_stock_mixed', 'مختلط غیر سهامی'),
+            ('stock_mixed', 'مختلط سهامی'),
+            ('proportional_liability', 'نسبی'),
+            ('cooperative', 'تعاونی تولید و مصرف'),
         ])
     
-    logo = models.FileField(
+    logo = models.ImageField(
         upload_to='logo/company/',
         null=True, blank=True,
-        verbose_name="لوگو")
+        verbose_name="لوگو",
+        validators=[FileExtensionValidator(allowed_extensions=['jpg', 'jpeg', 'png', 'svg'])])
     
     class Meta:
         verbose_name = "شرکت"
