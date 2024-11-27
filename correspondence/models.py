@@ -4,6 +4,7 @@ from positions.models import Position
 import uuid
 from django.contrib.auth import get_user_model
 from django.core.validators import FileExtensionValidator
+from django.utils import timezone
 
 class Attache(models.Model):
     name = models.CharField(max_length=255, verbose_name="نام فایل")
@@ -11,7 +12,7 @@ class Attache(models.Model):
         upload_to="attachments/%Y/%m/",  
         verbose_name="فایل",
         validators=[FileExtensionValidator(allowed_extensions=['pdf', 'doc', 'docx', 'jpg', 'png'])])
-    created_at = models.DateTimeField(auto_now_add=True,verbose_name="تاریخ ایجاد")
+    created_at = models.DateTimeField(default=timezone.now,verbose_name="تاریخ ایجاد")
     class Meta:
         verbose_name = "پیوست"
         verbose_name_plural = "پیوست‌ها"
@@ -92,12 +93,12 @@ class Correspondence (models.Model):
         verbose_name="شناسه یکتا",) 
        
     created_at = models.DateTimeField(
-        auto_now_add=True,
+        default=timezone.now,
         db_index=True,
         verbose_name="تاریخ ایجاد",)
     
     updated_at = models.DateTimeField(
-        auto_now=True,
+        default=timezone.now,
         db_index=True,
         verbose_name="تاریخ به‌روزرسانی",)
     
