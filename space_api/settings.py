@@ -12,9 +12,10 @@ AUTH_USER_MODEL = 'user.User'
 
 SECRET_KEY = os.getenv('SECRET_KEY')
 
-DEBUG = os.getenv('DEBUG', 'False') == 'True'
+DEBUG = True#os.getenv('DEBUG', 'False') == 'True'
 
 ALLOWED_HOSTS = os.getenv('ALLOWED_HOSTS', '').split(',')
+
 CORS_ALLOW_ALL_ORIGINS = True
 
 CORS_ALLOW_METHODS = [
@@ -139,9 +140,9 @@ USE_TZ = True
 BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 
 STATIC_URL = '/static/'
-STATIC_ROOT = os.path.join(BASE_DIR, 'static')  
+STATIC_ROOT = os.path.join(BASE_DIR, 'static')
 MEDIA_URL = '/media/'
-MEDIA_ROOT = os.path.join(BASE_DIR, 'media')  
+MEDIA_ROOT = os.path.join(BASE_DIR, 'media')
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 
 # Security settings
@@ -169,5 +170,10 @@ SESSION_COOKIE_SECURE = os.getenv('DEBUG', 'False') != 'True'
 #         },
 #     },
 # }
+
+# اضافه کردن STATICFILES_DIRS برای پوشه‌های استاتیک اضافی
+STATICFILES_DIRS = [
+    os.path.join(BASE_DIR, 'static_files'),
+]
 
 
