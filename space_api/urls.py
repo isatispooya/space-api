@@ -3,6 +3,7 @@ from django.urls import path, include
 from django.conf import settings
 from django.conf.urls.static import static
 from rest_framework import routers
+
 from positions.views import PositionViewset
 
 router = routers.DefaultRouter()
@@ -15,6 +16,8 @@ urlpatterns = [
     path('' , include('access.urls')),
     path('' , include('companies.urls')),
     path('' , include(router.urls)),
+    path('correspondence/', include('correspondence.urls')),
+
 ]
 
 # سرو فایل‌های استاتیک و مدیا در هر حالت

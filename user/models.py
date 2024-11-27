@@ -199,3 +199,12 @@ class UUid(models.Model):
     status = models.BooleanField(default=True)
     expire = models.DateTimeField(null=True, blank=True)   
 
+
+
+class CodeForgotPassword(models.Model):
+    user = models.ForeignKey(User, on_delete=models.CASCADE)
+    code = models.CharField(max_length=6)
+    expire = models.DateTimeField(null=True, blank=True)
+    status = models.BooleanField(default=True)
+
+
