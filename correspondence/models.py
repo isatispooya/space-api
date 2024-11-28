@@ -1,6 +1,7 @@
 from django.db import models
 from user.models import User
 from positions.models import Position
+from companies.models import Company
 import uuid
 from django.contrib.auth import get_user_model
 from django.core.validators import FileExtensionValidator
@@ -11,8 +12,14 @@ class Attache(models.Model):
     file = models.FileField(
         upload_to="attachments/%Y/%m/",  
         verbose_name="فایل",
-        validators=[FileExtensionValidator(allowed_extensions=['pdf', 'doc', 'docx', 'jpg', 'png'])])
+        validators=[FileExtensionValidator(allowed_extensions=['pdf', 'doc', 'docx', 'jpg', 'jpeg', 'png', 'xlsx', 'xls'])])
+    size = models.PositiveIntegerField(verbose_name="حجم فایل (بایت)", editable=False)
     created_at = models.DateTimeField(default=timezone.now,verbose_name="تاریخ ایجاد")
+
+    def save(self, *args, **kwargs):
+        if self.file:
+            self.size = self.file.size
+        super().save(*args, **kwargs)
     class Meta:
         verbose_name = "پیوست"
         verbose_name_plural = "پیوست‌ها"
@@ -23,26 +30,105 @@ class Attache(models.Model):
     def __str__(self):
         return f"{self.name} ({self.created_at:%Y-%m-%d})"
 
+class Number(models.Model):
+    number = models.CharField(max_length=20, verbose_name="شماره")
+    created_at = models.DateTimeField(
+        default=timezone.now,
+        verbose_name="تاریخ ایجاد"
+    )
+    class Meta:
+        verbose_name = "شماره مکاتبه"
+        verbose_name_plural = "شماره‌های مکاتبات"
+        ordering = ['-created_at']
+        indexes = [
+            models.Index(fields=['number']),
+            models.Index(fields=['created_at']),
+        ]
 
-class Correspondence (models.Model):
-    STATUS_CHOICES = [
-        ('draft', 'پیش‌نویس'),
-        ('sent', 'ارسال شده'),
-        ('received', 'دریافت شده'),
-        ('archived', 'بایگانی شده'),]
+    def __str__(self):
+        return str(self.number)
+
+class Reference(models.Model):
+    reference = models.ForeignKey(
+        Position,
+        on_delete=models.PROTECT,
+        related_name='reference_positions',
+        verbose_name="مرجع",)
+    read_at = models.DateTimeField(
+        null=True,
+        blank=True,
+        db_index=True,
+        verbose_name="تاریخ خوانده شدن",)
+    send_at = models.DateTimeField(
+        null=True,
+        blank=True,
+        db_index=True,
+        verbose_name="تاریخ ارسال",)
+    correspondence = models.ForeignKey(
+        'Correspondence',
+        on_delete=models.PROTECT,
+        related_name='reference_correspondences',
+        verbose_name="مکاتبه",)
+    instruction_text = models.TextField(
+        blank=True,
+        null=True,
+        verbose_name="متن دستور",)
     
-    sender = models.ForeignKey(
-        get_user_model(),
-        on_delete=models.PROTECT, 
-        related_name='sent_correspondence',
-        verbose_name="فرستنده",)
+    class Meta:
+        verbose_name = "مرجع"
+        verbose_name_plural = "مراجع"
+
+class Receiver(models.Model):
+    RECEIVER_TYPES = [
+        ('internal', 'داخلی'),
+        ('external', 'خارجی'),
+        ('organizational', 'سازمانی'),
+    ]
     
-    receiver = models.ForeignKey(
+    receiver_type = models.CharField(
+        max_length=20,
+        choices=RECEIVER_TYPES,
+        verbose_name="نوع گیرنده",
+    )
+    
+    position = models.ForeignKey(
+        Position,
+        on_delete=models.PROTECT,
+        null=True,
+        blank=True,
+        related_name='receiver_positions',
+        verbose_name="سمت سازمانی",
+    )
+    
+    user = models.ForeignKey(
         get_user_model(),
         on_delete=models.PROTECT,
-        related_name='received_correspondence',
-        verbose_name="گیرنده",)
+        null=True,
+        blank=True,
+        related_name='receiver_users',
+        verbose_name="کاربر",
+    )
     
+    organization_name = models.CharField(
+        max_length=255,
+        null=True,
+        blank=True,
+        verbose_name="نام سازمان",
+    )
+    
+    organization_identifier = models.CharField(
+        max_length=100,
+        null=True,
+        blank=True,
+        verbose_name="شناسه سازمان",
+    )
+
+    class Meta:
+        verbose_name = "گیرنده"
+        verbose_name_plural = "گیرندگان"
+
+class Correspondence (models.Model):
+
     subject = models.CharField(  
         max_length=255,
         blank = True,
@@ -50,40 +136,69 @@ class Correspondence (models.Model):
         db_index=True,
         verbose_name="موضوع",)
     
-    number = models.BigIntegerField(
-        null=True,
-        blank= True,
-        db_index=True,
-        verbose_name="شماره",)
-    
-    attachments = models.ForeignKey(
-        Attache,
-        null=True,
-        blank = True,
-        on_delete=models.CASCADE,
-        verbose_name="پیوست",)
-    
     text = models.TextField(
         blank = True,
         null = True,
         verbose_name="متن",)
     
-    status = models.CharField( 
-        max_length=20,
-        choices=STATUS_CHOICES,
-        default='draft',
+    description = models.TextField(
+        blank = True,
+        null = True,
+        verbose_name="توضیحات",)
+
+    number = models.ForeignKey(
+        Number,
+        null=True,
+        blank= True,
+        on_delete=models.PROTECT,
         db_index=True,
-        verbose_name="وضعیت",)
+        verbose_name="شماره مکاتبه",)
     
-    is_foreign = models.BooleanField(
+    attachments = models.ManyToManyField(
+        Attache,
+        blank=True,
+        verbose_name="پیوست‌ها",
+        related_name='correspondences_attachments')
+    
+    sender = models.ForeignKey(
+        Position,
+        on_delete=models.PROTECT, 
+        related_name='sent_correspondence',
+        verbose_name="فرستنده",)
+    
+    receiver = models.ForeignKey(
+        Receiver,
+        on_delete=models.PROTECT,
+        related_name='received_correspondence',
+        verbose_name="گیرنده",)
+    
+    is_foreign_or_internal = models.BooleanField(
         default=False,
         db_index=True,
-        verbose_name="خارجی",)
+        verbose_name="خارجی یا داخلی",)
     
-    is_internal = models.BooleanField(
-        default=True,
-        db_index=True,
-        verbose_name="داخلی",)
+    postcript = models.TextField(
+        blank = True,
+        null = True,
+        verbose_name="پی نوشت",)
+    
+    seal = models.ForeignKey(
+        Company,
+        null=True,
+        blank=True, 
+        to_field='seal',
+        on_delete=models.PROTECT,
+        related_name='correspondence_seals',
+        verbose_name="مهر تجاری",)
+    
+    signature = models.ForeignKey(
+        Company,
+        null=True,
+        blank=True, 
+        to_field='signature',
+        on_delete=models.PROTECT,
+        related_name='correspondence_signatures',
+        verbose_name="امضا",)
     
     uuid = models.UUIDField(
         default=uuid.uuid4,
@@ -91,25 +206,20 @@ class Correspondence (models.Model):
         unique=True,
         db_index=True,
         verbose_name="شناسه یکتا",) 
-       
-    created_at = models.DateTimeField(
-        default=timezone.now,
-        db_index=True,
-        verbose_name="تاریخ ایجاد",)
     
-    updated_at = models.DateTimeField(
-        default=timezone.now,
+    binding = models.BooleanField(
+        default=False,
         db_index=True,
-        verbose_name="تاریخ به‌روزرسانی",)
+        verbose_name="تعهد آور",)
     
-    priority = models.CharField(
-        max_length=20,
-        choices=[
-            ('normal', 'عادی'),
-            ('immediate', 'فوری'),
-            ('very_immediate', 'خیلی فوری'),],
-        default='normal',
-        verbose_name="اولویت",)
+    letterhead = models.ForeignKey(
+        Company,
+        null=True,
+        blank=True, 
+        to_field='letterhead',
+        on_delete=models.PROTECT,
+        related_name='correspondence_letterheads',
+        verbose_name="سر برگ",)
     
     confidentiality_level = models.CharField(
         max_length=20,
@@ -121,12 +231,98 @@ class Correspondence (models.Model):
         default='normal',
         verbose_name="سطح محرمانگی",)
     
+    priority = models.CharField(
+        max_length=20,
+        choices=[
+            ('normal', 'عادی'),
+            ('immediate', 'فوری'),
+            ('very_immediate', 'خیلی فوری'),],
+        default='normal',
+        verbose_name="اولویت",)
+
+    kind_of_correspondence = models.CharField(
+        max_length=20,
+        choices=[
+            ('announcement', 'اعلامیه'),
+            ('request', 'درخواست'),],
+        default='request',
+        verbose_name="نوع مکاتبه",)
+    
+    Authority_TYPES = [
+        ('new', 'جدید'),
+        ('referring_to', 'عطف به'),
+        ('following', 'پیرو'),
+        ('return_to', 'بازگشت به'),
+        ('in_response_to', 'در پاسخ به'),
+        ('attached_to', 'به پیوست'),
+        ('amendment', 'اصلاحیه'),
+    ]
+
+    authority_type = models.CharField(
+        max_length=20,
+        choices=Authority_TYPES, 
+        default='new',
+        verbose_name="نوع ارجاع",
+    )
+
+    authority_correspondence = models.ForeignKey(
+        'self',
+        on_delete=models.PROTECT,
+        null=True,
+        blank=True,
+        related_name='referencing_correspondences',
+        verbose_name="نامه مرجع",
+    )
+
+    reference = models.ManyToManyField(
+        Reference , 
+        blank=True,
+        verbose_name="ارجاعات",
+        related_name='correspondences_references')
+    
+    signature_placement = models.BooleanField(
+        default=False,
+        db_index=True,
+        verbose_name="امضا",)
+    
+    seal_placement = models.BooleanField(
+        default=False,
+        db_index=True,
+        verbose_name="مهر تجاری",)
+    
+    published = models.BooleanField(
+        default=False,
+        db_index=True,
+        verbose_name="انتشار",)
+    
+    created_at = models.DateTimeField(
+        default=timezone.now,
+        db_index=True,
+        verbose_name="تاریخ ایجاد",)
+    
+    updated_at = models.DateTimeField(
+        default=timezone.now,
+        db_index=True,
+        verbose_name="تاریخ به‌روزرسانی",)
+    
+    received_at = models.DateTimeField(
+        null=True,
+        blank=True,
+        db_index=True,
+        verbose_name="تاریخ دریافت",)
+    
+    read_at = models.DateTimeField(
+        null=True,
+        blank=True,
+        db_index=True,
+        verbose_name="تاریخ خوانده شدن",)
+    
     class Meta:
         verbose_name = "مکاتبه"
         verbose_name_plural = "مکاتبات"
         ordering = ['-created_at']
         indexes = [
-            models.Index(fields=['created_at', 'status']),
+            models.Index(fields=['created_at']),
             models.Index(fields=['sender', 'receiver']),
         ]
     def __str__(self):

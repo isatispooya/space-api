@@ -5,15 +5,11 @@ from .models import Correspondence
 from .serializers import CorrespondenceSerializer
 
 class CorrespondenceSenderViewset(viewsets.ModelViewSet):
-    queryset = Correspondence.objects.all()
-    serializer_class = CorrespondenceSerializer
-    permission_classes = [IsAuthenticated]
-    def get_queryset(self):
-        return Correspondence.objects.filter(sender=self.request.user)
+    # تنظیمات ویوست رو اینجا قرار بدید
+    pass
 
 class CorrespondenceReceiverViewset(viewsets.ModelViewSet):
-    serializer_class = CorrespondenceSerializer
-    permission_classes = [IsAuthenticated]
+    # تنظیمات ویوست رو اینجا قرار بدید
+    pass
 
-    def get_queryset(self):
-        return Correspondence.objects.filter(receiver=self.request.user)
+ 
