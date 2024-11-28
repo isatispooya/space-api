@@ -47,10 +47,21 @@ jobs:
         run: |
           ssh -p $SERVER_PORT $SERVER_USER@$SERVER_HOST "
             cd $SERVER_DIR
+            echo 'Removing old migrations...'
             find . -path '*/migrations/*.py' -not -name '__init__.py' -delete
             find . -path '*/migrations/*.pyc' -delete
-            python3 manage.py makemigrations
-            python3 manage.py migrate
+            
+            echo 'Making new migrations...'
+            python3 manage.py makemigrations --verbosity 2
+            
+            echo 'Show migrations status...'
+            python3 manage.py showmigrations
+            
+            echo 'Applying migrations...'
+            python3 manage.py migrate --verbosity 2
+            
+            echo 'Final migrations status...'
+            python3 manage.py showmigrations
           "
 
       - name: Setup Static Files
