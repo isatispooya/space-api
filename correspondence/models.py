@@ -78,55 +78,6 @@ class Reference(models.Model):
         verbose_name = "مرجع"
         verbose_name_plural = "مراجع"
 
-class Receiver(models.Model):
-    RECEIVER_TYPES = [
-        ('internal', 'داخلی'),
-        ('external', 'خارجی'),
-        ('organizational', 'سازمانی'),
-    ]
-    
-    receiver_type = models.CharField(
-        max_length=20,
-        choices=RECEIVER_TYPES,
-        verbose_name="نوع گیرنده",
-    )
-    
-    position = models.ForeignKey(
-        Position,
-        on_delete=models.PROTECT,
-        null=True,
-        blank=True,
-        related_name='receiver_positions',
-        verbose_name="سمت سازمانی",
-    )
-    
-    user = models.ForeignKey(
-        get_user_model(),
-        on_delete=models.PROTECT,
-        null=True,
-        blank=True,
-        related_name='receiver_users',
-        verbose_name="کاربر",
-    )
-    
-    organization_name = models.CharField(
-        max_length=255,
-        null=True,
-        blank=True,
-        verbose_name="نام سازمان",
-    )
-    
-    organization_identifier = models.CharField(
-        max_length=100,
-        null=True,
-        blank=True,
-        verbose_name="شناسه سازمان",
-    )
-
-    class Meta:
-        verbose_name = "گیرنده"
-        verbose_name_plural = "گیرندگان"
-
 class Correspondence (models.Model):
 
     subject = models.CharField(  
@@ -166,15 +117,25 @@ class Correspondence (models.Model):
         related_name='sent_correspondence',
         verbose_name="فرستنده",)
     
-    receiver = models.ForeignKey(
-        Receiver,
+
+    receiver_internal = models.ForeignKey(
+        Position,
         on_delete=models.PROTECT,
-        related_name='received_correspondence',
-        verbose_name="گیرنده",)
-    
-    is_foreign_or_internal = models.BooleanField(
-        default=False,
-        db_index=True,
+        null=True,
+        blank=True,
+        related_name='receiver_internal',
+        verbose_name="دریافت کننده داخلی",
+    )
+
+    receiver_external = models.CharField(
+        max_length=255,
+        null=True,
+        blank=True,
+        verbose_name="دریافت کننده خارجی",
+    )
+
+    is_internal = models.BooleanField(
+        default=True,
         verbose_name="خارجی یا داخلی",)
     
     postcript = models.TextField(
@@ -290,6 +251,11 @@ class Correspondence (models.Model):
         db_index=True,
         verbose_name="مهر تجاری",)
     
+    draft = models.BooleanField(
+        default=True,
+        db_index=True,
+        verbose_name="پیش‌نویس",)
+    
     published = models.BooleanField(
         default=False,
         db_index=True,
@@ -323,7 +289,7 @@ class Correspondence (models.Model):
         ordering = ['-created_at']
         indexes = [
             models.Index(fields=['created_at']),
-            models.Index(fields=['sender', 'receiver']),
+            models.Index(fields=['uuid']),
         ]
     def __str__(self):
         return f"{self.number} - {self.subject} ({self.created_at:%Y-%m-%d})"

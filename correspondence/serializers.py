@@ -1,5 +1,6 @@
 from rest_framework import serializers
 from .models import Correspondence, Attache
+from positions.serializers import PositionSerializer
 
 
 class AttacheSerializer(serializers.ModelSerializer):
@@ -12,6 +13,7 @@ class CorrespondenceSerializer(serializers.ModelSerializer):
     attache_details = AttacheSerializer(source='attache', read_only=True)
     attache_file = serializers.FileField(write_only=True, required=False)
     attache_name = serializers.CharField(write_only=True, required=False)
+    sender = PositionSerializer(read_only=True)
 
     class Meta:
         model = Correspondence
