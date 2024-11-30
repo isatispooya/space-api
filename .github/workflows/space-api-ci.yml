@@ -52,13 +52,15 @@ jobs:
             find . -path '*/migrations/*.pyc' -delete
             
             echo 'Making new migrations...'
+            python3 manage.py makemigrations user --verbosity 2
             python3 manage.py makemigrations --verbosity 2
             
             echo 'Show migrations status...'
             python3 manage.py showmigrations
             
             echo 'Applying migrations...'
-            python3 manage.py migrate --verbosity 2
+            python3 manage.py migrate user --verbosity 2
+            python3 manage.py migrate --verbosity 2 --force
             
             echo 'Final migrations status...'
             python3 manage.py showmigrations
