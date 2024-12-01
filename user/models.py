@@ -207,7 +207,5 @@ class CodeForgotPassword(models.Model):
     expire = models.DateTimeField()
     status = models.BooleanField(default=False)
 
-    class Meta:
-        db_table = 'user_codeforgotpassword'
 
 
