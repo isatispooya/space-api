@@ -31,11 +31,15 @@ class Attache(models.Model):
         return f"{self.name} ({self.created_at:%Y-%m-%d})"
 
 class Number(models.Model):
-    number = models.CharField(max_length=20, verbose_name="شماره")
+    number = models.IntegerField( verbose_name="شماره")
     created_at = models.DateTimeField(
         default=timezone.now,
         verbose_name="تاریخ ایجاد"
     )
+    jalali_year = models.IntegerField( verbose_name="سال شماره", editable=False)
+    company_registration = models.CharField(max_length=20, verbose_name="شماره ثبت", editable=False)
+    internal_correspondence = models.BooleanField(default=False, verbose_name="مکاتبه داخلی", editable=False)
+
     class Meta:
         verbose_name = "شماره مکاتبه"
         verbose_name_plural = "شماره‌های مکاتبات"

@@ -9,11 +9,17 @@ class AttacheSerializer(serializers.ModelSerializer):
         fields = ['id', 'name', 'file']
 
         
+class CorrespondenceNumberSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Correspondence
+        fields = ['number']
+
 class CorrespondenceSerializer(serializers.ModelSerializer):
     attache_details = AttacheSerializer(source='attache', read_only=True)
     attache_file = serializers.FileField(write_only=True, required=False)
     attache_name = serializers.CharField(write_only=True, required=False)
     sender = PositionSerializer(read_only=True)
+    number = CorrespondenceNumberSerializer(read_only=True)
 
     class Meta:
         model = Correspondence
