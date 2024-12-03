@@ -7,11 +7,11 @@ from django.utils import timezone
 
 class Position(models.Model):
     EMPLOYMENT_TYPES = [
-        ('Full Time', 'تمام وقت'),
-        ('Part Time', 'پاره وقت'),
-        ('Contract', 'قراردادی'),
-        ('Freelance', 'فریلنسر'),
-        ('Internship', 'استخدام آزمایشی'),]
+        ('full_time', 'تمام وقت'),
+        ('part_time', 'پاره وقت'),
+        ('contract', 'قراردادی'),
+        ('freelance', 'فریلنسر'),
+        ('internship', 'استخدام آزمایشی'),]
 
     name = models.CharField(
         max_length=200,
