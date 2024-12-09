@@ -17,9 +17,10 @@ from .date import parse_date
 from datetime import timedelta
 from uuid import uuid4
 from utils.legal import is_legal_person
-from utils.sms import SendSmsCode
 from rest_framework_simplejwt.tokens import RefreshToken 
 import random
+from utils.notification_service import NotificationService
+
 
 # otp sejam
 class OtpSejamViewset(APIView):
@@ -280,9 +281,10 @@ class ForgotPasswordViewset(APIView):
         serializer = CodeForgotPasswordSerializer(code_create).data
         print(serializer['code'])
         code = serializer['code']
-        
-        SendSmsCode(mobile, code)
-        
+
+        notification_service = NotificationService()
+        notification_service.send_sms(to = str(mobile), message=str(code), template='password_reset')
+
         if created:
             code_create.status = True
             code_create.save()
