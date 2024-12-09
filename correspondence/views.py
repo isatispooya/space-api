@@ -37,7 +37,7 @@ class CorrespondencerViewset(viewsets.ModelViewSet):
             ).select_related('sender', 'receiver_internal')
 
     def perform_create(self, serializer):
-        sender_position = Position.objects.filter(user=self.request.user).first()
+        sender_position = Position.objects.filter(user=self.request.user).first() # get sender position
         if not sender_position:
             raise ValidationError("کاربر فعلی دارای موقعیت سازمانی نیست")
         
