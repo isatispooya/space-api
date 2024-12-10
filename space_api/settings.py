@@ -39,6 +39,7 @@ INSTALLED_APPS = [
     'companies',
     'positions',
     'correspondence',
+    'stock_affairs',
 
 ]
 
