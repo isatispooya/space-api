@@ -22,7 +22,9 @@ class Shareholders(models.Model):
     )
     updated_at = models.DateTimeField(
         auto_now=True,
-        verbose_name="تاریخ به‌روزرسانی"
+        verbose_name="تاریخ به‌روزرسانی",
+        null=True,
+        blank=True
     )
 
     class Meta:
@@ -135,7 +137,6 @@ class CapitalIncreasePayment(models.Model):
         auto_now=True,
         verbose_name="تاریخ به‌روزرسانی"
     )
-
     class Meta:
         verbose_name = "پرداخت افزایش سرمایه"
         verbose_name_plural = "پرداخت‌های افزایش سرمایه"
@@ -176,6 +177,7 @@ class DisplacementPrecedence(models.Model):
     )
     created_at = models.DateTimeField(
         default=timezone.now,
+        
         verbose_name="تاریخ ایجاد"
     )
     updated_at = models.DateTimeField(
