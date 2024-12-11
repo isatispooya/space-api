@@ -12,6 +12,8 @@ from rest_framework.permissions import IsAdminUser
 from rest_framework.response import Response
 from django.contrib.auth.models import Group 
 from .serializer import GroupSerializer
+from django.contrib.auth import get_user_model
+from rest_framework.viewsets import ModelViewSet
 
 class CaptchaViewset(APIView) :
     permission_classes = [AllowAny]
@@ -20,6 +22,7 @@ class CaptchaViewset(APIView) :
         captcha = GuardPyCaptcha ()
         captcha = captcha.Captcha_generation(num_char=4 , only_num= True)
         return Response ({'captcha' : captcha} , status = status.HTTP_200_OK)
+
     
 class GroupManagementViewSet(viewsets.ModelViewSet):
     queryset = Group.objects.all()
@@ -67,4 +70,32 @@ class GroupManagementViewSet(viewsets.ModelViewSet):
             )
         
 
-
+User = get_user_model()
+class UserToGroupViewSet(ModelViewSet):
+    permission_classes = [IsAdminUser]
+    
+    def assign_group(self, request):
+        try:
+            user_id = request.data.get('user_id')
+            group_ids = request.data.get('groups', [])
+            
+            user = User.objects.get(id=user_id)
+            
+            user.groups.set(group_ids)
+            
+            return Response({
+                'message': 'کاربر با موفقیت به گروه‌ها اضافه شد',
+                'user': user.username,
+                'groups': list(user.groups.values_list('name', flat=True))
+            }, status=status.HTTP_200_OK)
+            
+        except User.DoesNotExist:
+            return Response(
+                {'error': 'کاربر مورد نظر یافت نشد'},
+                status=status.HTTP_404_NOT_FOUND
+            )
+        except Exception as e:
+            return Response(
+                {'error': str(e)},
+                status=status.HTTP_400_BAD_REQUEST
+            )

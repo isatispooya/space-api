@@ -1,4 +1,4 @@
-from .views import  CaptchaViewset, GroupManagementViewSet
+from .views import  CaptchaViewset, GroupManagementViewSet , UserToGroupViewSet
 from django.urls import path
 from rest_framework_simplejwt.views import (
     TokenObtainPairView,
@@ -20,6 +20,7 @@ urlpatterns = [
         'patch': 'partial_update',
         'delete': 'destroy'
     }), name='group-detail'),
+    path('user-to-group/', UserToGroupViewSet.as_view({'post': 'assign_group'}), name='user-to-group'),
 ]
 
 
