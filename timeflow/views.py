@@ -40,16 +40,31 @@ class LogoutView(APIView):
     
     def post(self, request):
         try:
-            refresh_token = request.data["refresh"]
-            token = RefreshToken(refresh_token)
-            token.blacklist()
+            refresh_token = request.data.get("refresh")
+            if not refresh_token:
+                return Response(
+                    {"detail": "Refresh token is required"},
+                    status=status.HTTP_400_BAD_REQUEST
+                )
+            try:
+                token = RefreshToken(refresh_token)
+                token.blacklist()
+            except Exception:
+                return Response(
+                    {"detail": "Invalid or expired refresh token"},
+                    status=status.HTTP_400_BAD_REQUEST
+                )
+
             
             # اضافه کردن لاگ
             UserLoginLog.objects.create(
                 user=request.user,
-                action='logout',
-                status='success'
+                type='logout',
+                ip_address=request.META.get('REMOTE_ADDR', ''),
+                user_agent=request.META.get('HTTP_USER_AGENT', ''),
+                logout_status=True,
             )
+
             
             return Response(
                 {"detail": "Successfully logged out"}, 
