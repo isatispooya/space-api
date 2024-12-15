@@ -40,6 +40,7 @@ INSTALLED_APPS = [
     'positions',
     'correspondence',
     'stock_affairs',
+    'timeflow',
 
 ]
 
@@ -59,14 +60,15 @@ ROOT_URLCONF = 'space_api.urls'
 
 
 REST_FRAMEWORK = {
-    'DEFAULT_AUTHENTICATION_CLASSES': (
+    'DEFAULT_AUTHENTICATION_CLASSES': [
+        'timeflow.authentication.CustomJWTAuthentication',
         'rest_framework_simplejwt.authentication.JWTAuthentication',
-    ),
+    ],
     'DEFAULT_PERMISSION_CLASSES': [
         'rest_framework.permissions.IsAuthenticated',
     ],
     'DEFAULT_PAGINATION_CLASS': 'rest_framework.pagination.PageNumberPagination',
-    'PAGE_SIZE': 10
+    'PAGE_SIZE': 10 ,
 }
 
 
