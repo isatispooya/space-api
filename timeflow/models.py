@@ -12,9 +12,9 @@ class UserLoginLog(models.Model):
     type = models.CharField(max_length=10 , choices=[('login' , 'ورود') , ('logout' , 'خروج')])
     # اطلاعات سیستم
     ip_address = models.GenericIPAddressField()
-    device_type = models.CharField(max_length=50 , null=True , blank=True)  # موبایل/دسکتاپ
-    os_type = models.CharField(max_length=50 , null=True , blank=True)      # سیستم عامل
-    browser = models.CharField(max_length=100 , null=True , blank=True)     # مرورگر
+    device_type = models.CharField(max_length=200 , null=True , blank=True)  # موبایل/دسکتاپ
+    os_type = models.CharField(max_length=200 , null=True , blank=True)      # سیستم عامل
+    browser = models.CharField(max_length=500 , null=True , blank=True)     # مرورگر
     # وضعیت
     login_status = models.BooleanField(default=True , null=True , blank=True)  # موفق/ناموفق
     # اطلاعات اضافی
