@@ -43,6 +43,7 @@ INSTALLED_APPS = [
     'stock_affairs',
     'timeflow',
     'rest_framework_simplejwt.token_blacklist',
+    'core',
 
 ]
 
