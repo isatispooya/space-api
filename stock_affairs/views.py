@@ -7,14 +7,14 @@ from rest_framework.response import Response
 from rest_framework import status
 from django.db.models import Q
 from django.core.exceptions import ValidationError
-
+from stock_affairs.permission import IsShareholder , IsPrecedence , IsUnusedPrecedencePurchase , IsUnusedPrecedenceProcess
 
 
 
 class ShareholdersViewset(viewsets.ModelViewSet):
     queryset = Shareholders.objects.all()
     serializer_class = ShareholdersSerializer
-    permission_classes = [IsAuthenticated]
+    permission_classes = [IsAuthenticated , IsShareholder]
 
     def get_permissions(self):
         if self.action in ['create', 'update', 'partial_update', 'destroy']:
@@ -42,7 +42,7 @@ class StockTransferViewset(viewsets.ModelViewSet):
 class PrecedenceViewset(viewsets.ModelViewSet):
     queryset = Precedence.objects.all()
     serializer_class = PrecedenceSerializer
-    permission_classes = [IsAuthenticated]
+    permission_classes = [IsAuthenticated, IsPrecedence]
 
     def get_permissions(self):
         if self.action in ['create', 'update', 'partial_update', 'destroy']:
@@ -53,7 +53,7 @@ class PrecedenceViewset(viewsets.ModelViewSet):
 class CapitalIncreasePaymentViewset(viewsets.ModelViewSet):
     queryset = CapitalIncreasePayment.objects.all()
     serializer_class = CapitalIncreasePaymentSerializer
-    permission_classes = [IsAuthenticated]
+    permission_classes = [IsAuthenticated , IsPrecedence]
 
     def get_permissions(self):
         if self.action in ['create', 'update', 'partial_update', 'destroy']:
@@ -75,7 +75,7 @@ class DisplacementPrecedenceViewset(viewsets.ModelViewSet):
 class UnusedPrecedencePurchaseViewset(viewsets.ModelViewSet):
     queryset = UnusedPrecedencePurchase.objects.all()
     serializer_class = UnusedPrecedencePurchaseSerializer
-    permission_classes = [IsAuthenticated]
+    permission_classes = [IsAuthenticated , IsUnusedPrecedencePurchase]
 
     def get_permissions(self):
         if self.action in ['create' , 'list' , 'retrieve']:
@@ -150,7 +150,7 @@ class UnusedPrecedencePurchaseViewset(viewsets.ModelViewSet):
 class UnusedPrecedenceProcessViewset(viewsets.ModelViewSet):
     queryset = UnusedPrecedenceProcess.objects.all()
     serializer_class = UnusedPrecedenceProcessSerializer
-    permission_classes = [IsAuthenticated]
+    permission_classes = [IsAuthenticated , IsUnusedPrecedenceProcess]
 
     def get_queryset(self):
         if self.request.user.is_staff:
