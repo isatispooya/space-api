@@ -213,6 +213,15 @@ class UnusedPrecedenceProcess(models.Model):
     price = models.BigIntegerField(
         verbose_name="قیمت"
     )
+    description = models.TextField(
+        null=True , 
+        blank=True , 
+        verbose_name="توضیحات"
+    )
+    agreement = models.BooleanField(
+        default=True , 
+        verbose_name="موافقت نامه"
+    )
     end_date = models.DateTimeField(
         default=timezone.now,
         verbose_name="تاریخ اتمام "

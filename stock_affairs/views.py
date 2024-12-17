@@ -86,14 +86,28 @@ class UnusedPrecedencePurchaseViewset(viewsets.ModelViewSet):
     
     def create(self, request):
         process_id = request.data.get('process')
-        requested_amount = request.data.get('requested_amount')
+        requested_amount = request.data.get('amount')
         process = UnusedPrecedenceProcess.objects.get(id=process_id)
         # بررسی موجودی
-        if requested_amount > process.used_amount:
+        if int(requested_amount) > int(process.used_amount):
             raise ValidationError({"error": "مقدار درخواستی بیشتر از موجودی است"})
         # محاسبه قیمت
-        calculated_price = requested_amount * process.price
+        calculated_price = int(requested_amount) * int(process.price)
+        # بررسی نوع فرایند
 
+        document = None
+        transaction_id = None
+        transaction_url = None
+
+        if request.data.get('type') == '1':
+            # فیش
+            document = request.FILES.get('document')
+            if not document:
+                raise ValidationError({"error": "فیش الزامی است"})
+        elif request.data.get('type') == '2':
+            # درگاه پرداخت
+            transaction_id = '1234567890'
+            transaction_url = 'https://example.com/transaction/1234567890'
         # ساخت دیتای اولیه
         data = {
             'user': request.user.id,
@@ -101,10 +115,12 @@ class UnusedPrecedencePurchaseViewset(viewsets.ModelViewSet):
             'requested_amount': requested_amount,
             'amount': process.used_amount,
             'price': calculated_price,
-            'status': 'pending'
+            'status': 'pending', 
+            'document': document,
+            'transaction_id': transaction_id,
+            'transaction_url': transaction_url,
+            'type': request.data.get('type')
         }
-
-     
         serializer = self.get_serializer(data=data)
         serializer.is_valid(raise_exception=True)
         self.perform_create(serializer)
@@ -118,6 +134,17 @@ class UnusedPrecedencePurchaseViewset(viewsets.ModelViewSet):
         else:
             return super().get_queryset().filter(user=self.request.user)
         
+    
+    def update(self, request, *args, **kwargs):
+        status = request.data.get('status')
+        if status == 'approved':
+            process = UnusedPrecedenceProcess.objects.get(id=request.data.get('process'))
+            requested_amount = request.data.get('requested_amount')
+            used_amount = int(process.used_amount) - int(requested_amount)
+            process.used_amount = used_amount
+            process.save()
+
+        return super().update(request, *args, **kwargs)
     
     
 class UnusedPrecedenceProcessViewset(viewsets.ModelViewSet):
