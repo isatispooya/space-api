@@ -222,6 +222,10 @@ class UnusedPrecedenceProcess(models.Model):
         default=True , 
         verbose_name="موافقت نامه"
     )
+    is_active = models.BooleanField(
+        default=True , 
+        verbose_name="فعال"
+    )
     end_date = models.DateTimeField(
         default=timezone.now,
         verbose_name="تاریخ اتمام "

@@ -8,5 +8,6 @@ router.register(r'shortcuts', views.ShortCutView, basename='shortcut')
 
 urlpatterns = [
     path('', include(router.urls)),
+    path('menu/', views.MenuView.as_view(), name='menu'),
 ]
 
