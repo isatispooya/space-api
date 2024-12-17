@@ -44,13 +44,13 @@ class MenuView(APIView):
         main = {'title': 'امور سهام','path': '/stock_affairs'}
         sub_menu = []
 
-        if IsShareholder().has_permission(request, self):
+        if IsShareholder().has_permission(request, self) or request.user.is_staff:
             sub_menu.append({'title': 'سهام','path': '/stock_affairs/stock'})
 
-        if IsPrecedence().has_permission(request, self):
+        if IsPrecedence().has_permission(request, self) or request.user.is_staff:
             sub_menu.append({'title': 'حق تقدم','path': '/stock_affairs/precedence'})
 
-        if IsUnusedPrecedencePurchase().has_permission(request, self):
+        if IsUnusedPrecedencePurchase().has_permission(request, self) or request.user.is_staff:
             sub_menu.append({'title': 'خرید حق تقدم استفاده نشده','path': '/stock_affairs/unused_precedence_purchase'})
 
         if len(sub_menu)>0:
@@ -72,8 +72,11 @@ class MenuView(APIView):
         self.menu_items.append(home)
         # stock_affairs
         stock_affairs = self.menu_stock_affairs(request)
+        correspondence = self.menu_correspondence(request)
         if stock_affairs:
             self.menu_items.append(stock_affairs)
+        if correspondence:
+            self.menu_items.append(correspondence)
 
 
 
