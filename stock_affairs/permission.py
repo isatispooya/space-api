@@ -36,3 +36,12 @@ class IsUnusedPrecedenceProcess(BasePermission):
     @property
     def get_permission_name(self):
         return "unused_precedence_process"
+    
+    def get_permission_data(self, request, view):
+        has_perm = self.has_permission(request, view)
+        if has_perm:
+            return {
+                "name": self.get_permission_name,
+                "has_permission": True
+            }
+        return None

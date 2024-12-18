@@ -49,9 +49,9 @@ class PermissionListForUserView(APIView):
         else:
             permissions = user.user_permissions.all()
         unused_precedence_process_perm = IsUnusedPrecedenceProcess()
-        permissions.append({
-            "name": unused_precedence_process_perm.get_permission_name,
-            "has_permission": unused_precedence_process_perm.get_permission_name,
-        })
+        perm_data = unused_precedence_process_perm.get_permission_data(request, self)
+        if perm_data:
+            permissions = list(permissions)
+            permissions.append(perm_data)
         serializer = PermissionSerializer(permissions, many=True)
         return Response(serializer.data)
