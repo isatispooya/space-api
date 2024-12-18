@@ -80,7 +80,22 @@ class MenuView(APIView):
             return {'title': 'گروه ها', 'path': '/groups/'}
         else:
             return None
+    def menu_companies(self, request):
+        main = {'title': 'شرکت ها','path': ''}
+        sub_menu = []
 
+        if request.user.is_staff:
+            sub_menu.append({'title': 'ایجاد شرکت ها ', 'path': '/companies/create/'})
+
+        if request.user.is_authenticated:
+            sub_menu.append({'title': 'لیست شرکت ها ', 'path': '/companies/table/'})
+
+        if len(sub_menu)>0:
+            main['sub_menu'] = sub_menu
+            return main
+        
+        else:
+            return None
     def get(self, request):
         self.menu_items = []
         # home
@@ -94,6 +109,7 @@ class MenuView(APIView):
         positions = self.menu_positions(request)
         permissions = self.menu_permissions(request)
         groups = self.menu_groups(request)
+        companies = self.menu_companies(request)
         if stock_affairs:
             self.menu_items.append(stock_affairs)
         if correspondence:
@@ -104,6 +120,8 @@ class MenuView(APIView):
             self.menu_items.append(permissions)
         if groups:
             self.menu_items.append(groups)
+        if companies:
+            self.menu_items.append(companies)
 
 
 
