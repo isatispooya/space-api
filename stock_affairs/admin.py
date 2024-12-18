@@ -9,13 +9,13 @@ admin.site.register(CapitalIncreasePayment)
 admin.site.register(Precedence)
 @admin.register(UnusedPrecedencePurchase)
 class UnusedPrecedencePurchaseAdmin(admin.ModelAdmin):
-    list_display = ['user'  , 'created_at' , 'status' , 'requested_amount' , 'price' , 'transaction_id' , 'amount']
+    list_display = ['user'  , 'created_at' , 'status' , 'requested_amount' , 'price' , 'track_id' , 'code_payment' , 'refrence_number' , 'cart_number' , 'code_state_payment' , 'description' , 'document' , 'transaction_url' ]
     list_filter = ['created_at' , 'user'  , 'status']
     search_fields = ['user'  , 'status']
     list_per_page = 100
     ordering = ['-created_at']
     list_editable = ['status']
-    list_display_links = ['user' ]
+    list_display_links = ['user' , 'track_id' , 'code_payment' , 'refrence_number' , 'cart_number' , 'code_state_payment' , 'description' , 'document' , 'transaction_url' ]
     list_select_related = ['user' ]
     fieldsets = [
         ('اطلاعات اصلی', {
@@ -28,7 +28,7 @@ class UnusedPrecedencePurchaseAdmin(admin.ModelAdmin):
             'fields': ['amount' , 'price' , 'requested_amount']
         }), 
         ('شناسه تراکنش', {
-            'fields': ['transaction_id' , 'transaction_url']
+            'fields': ['track_id' , 'code_payment' , 'refrence_number' , 'cart_number' , 'code_state_payment' , 'description' , 'transaction_url']
         }) , 
         ('فیش خرید', {
             'fields': ['document']

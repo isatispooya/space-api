@@ -257,11 +257,6 @@ class UnusedPrecedencePurchase(models.Model):
         on_delete=models.CASCADE,
         verbose_name="کاربر"
     )
-    amount = models.BigIntegerField(
-        null=True ,
-        blank=True,
-        verbose_name="مقدار موجود"
-    )
     requested_amount = models.BigIntegerField(
         null=True ,
         blank=True,
@@ -289,23 +284,56 @@ class UnusedPrecedencePurchase(models.Model):
     document = models.FileField(
         upload_to='stock_affairs/documents/' , 
         null=True , 
-        blank=True
+        blank=True, 
+        verbose_name="تصویر فیش"
     )
-    transaction_id = models.CharField(
+    track_id = models.CharField(
         max_length=255 , 
         null=True , 
-        blank=True
+        blank=True,
+        verbose_name="شناسه تراکنش"
     )
     transaction_url = models.CharField(
         max_length=500 , 
         null=True , 
-        blank=True
+        blank=True,
+        verbose_name="آدرس تراکنش"
+    )
+    code_payment = models.CharField(
+        max_length=255 , 
+        null=True , 
+        blank=True,
+        verbose_name="کد پرداخت"
+    )
+    refrence_number = models.CharField(
+        max_length=255 , 
+        null=True , 
+        blank=True,
+        verbose_name="شماره پیگیری شاپرک"
+    )
+    code_state_payment = models.CharField(
+        max_length=255 , 
+        null=True , 
+        blank=True,
+        verbose_name="کد وضعیت پرداخت"
+    )
+    cart_number = models.CharField(
+        max_length=255 , 
+        null=True , 
+        blank=True,
+        verbose_name="شماره کارت"
     )
     status = models.CharField(
         max_length=255 , 
         null=True , 
         blank=True , 
-        choices=[('pending' , 'درحال بررسی') , ('approved' , 'تایید شده') , ('rejected' , 'رد شده')]
+        choices=[('pending' , 'درحال بررسی') , ('approved' , 'تایید شده') , ('rejected' , 'رد شده')] , 
+        verbose_name="وضعیت"
+    )
+    description = models.TextField(
+        null=True , 
+        blank=True , 
+        verbose_name="توضیحات"
     )
     created_at = models.DateTimeField(
         default=timezone.now,
