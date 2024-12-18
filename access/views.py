@@ -37,12 +37,6 @@ class PermissionListForUserView(APIView):
         user = request.user
         if user.is_superuser or user.is_staff:
             permission_names = user.get_all_permissions()
-            """
-                این خط دسترسی‌های کاربر را به صورت کد نام فیلتر می‌کند
-                permission_names شامل دسترسی‌ها به فرمت "app_label.codename" است
-                با split('.') آن را جدا کرده و آخرین بخش که همان codename است را برمی‌داریم
-
-            """
             permissions = Permission.objects.filter(
                 codename__in=[perm.split('.')[-1] for perm in permission_names]
             )

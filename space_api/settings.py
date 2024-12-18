@@ -65,7 +65,15 @@ ROOT_URLCONF = 'space_api.urls'
 REST_FRAMEWORK = {
     'DEFAULT_AUTHENTICATION_CLASSES': (
         'rest_framework_simplejwt.authentication.JWTAuthentication',
-    )
+    ),
+    'DEFAULT_THROTTLE_CLASSES': [
+        'rest_framework.throttling.AnonRateThrottle',
+        'rest_framework.throttling.UserRateThrottle'
+    ],
+    'DEFAULT_THROTTLE_RATES': {
+        'anon': '30/minute',  # محدودیت برای کاربران ناشناس
+        'user': '30/minute'  # محدودیت برای کاربران احراز هویت شده
+    }
 }
 
 

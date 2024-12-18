@@ -7,7 +7,7 @@ from user.models import User
 
 class Shareholders(models.Model):
     name = models.ForeignKey(
-        Position, 
+        User, 
         on_delete=models.CASCADE,
         verbose_name="نام سهامدار"
     )
