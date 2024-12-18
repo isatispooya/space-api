@@ -15,9 +15,6 @@ class UserLoginLog(models.Model):
     device_type = models.CharField(max_length=200 , null=True , blank=True)  # موبایل/دسکتاپ
     os_type = models.CharField(max_length=200 , null=True , blank=True)      # سیستم عامل
     browser = models.CharField(max_length=500 , null=True , blank=True)     # مرورگر
-    # وضعیت
-    login_status = models.BooleanField(default=True , null=True , blank=True)  # موفق/ناموفق
-    logout_status = models.BooleanField(default=False , null=True , blank=True) # موفق/ناموفق
     # اطلاعات اضافی
     user_agent = models.TextField()       # User-Agent کامل
     class Meta:

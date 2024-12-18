@@ -14,6 +14,10 @@ from django.contrib.auth.models import Group
 from .serializer import GroupSerializer
 from django.contrib.auth import get_user_model
 from rest_framework.viewsets import ModelViewSet
+from rest_framework_simplejwt.tokens import RefreshToken
+from rest_framework.permissions import IsAuthenticated
+from timeflow.models import UserLoginLog
+from rest_framework_simplejwt.exceptions import TokenError
 
 class CaptchaViewset(APIView) :
     permission_classes = [AllowAny]
@@ -99,3 +103,54 @@ class UserToGroupViewSet(ModelViewSet):
                 {'error': str(e)},
                 status=status.HTTP_400_BAD_REQUEST
             )
+
+class LogoutView(APIView):
+    permission_classes = [IsAuthenticated]
+    
+    def post(self, request):
+        try:
+            refresh_token = request.data.get("refresh")
+            if not refresh_token:
+                return Response(
+                    {"error": "refresh_token is required"}, 
+                    status=status.HTTP_400_BAD_REQUEST
+                )
+            
+            try:
+                # تبدیل رشته به شیء RefreshToken
+                token = RefreshToken(refresh_token)
+                # بلک‌لیست کردن توکن
+                token.blacklist()
+            except TokenError as e:
+                return Response(
+                    {"error": f"Invalid token: {str(e)}"}, 
+                    status=status.HTTP_400_BAD_REQUEST
+                )
+            
+            UserLoginLog.objects.create(
+                user=request.user,
+                type='logout',
+                ip_address=request.META.get('REMOTE_ADDR'),
+                user_agent=request.META.get('HTTP_USER_AGENT')
+            )
+            
+            return Response(
+                {"detail": "Successfully logged out"}, 
+                status=status.HTTP_200_OK
+            )
+            
+        except Exception as e:
+            return Response(
+                {"error": str(e)},
+                status=status.HTTP_400_BAD_REQUEST
+            )
+        
+
+
+
+      
+            
+
+           
+            
+ 

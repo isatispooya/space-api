@@ -1,4 +1,4 @@
-from .views import  CaptchaViewset, GroupManagementViewSet , UserToGroupViewSet
+from .views import  CaptchaViewset, GroupManagementViewSet , UserToGroupViewSet, LogoutView
 from django.urls import path
 from rest_framework_simplejwt.views import (
     TokenObtainPairView,
@@ -21,6 +21,7 @@ urlpatterns = [
         'delete': 'destroy'
     }), name='group-detail'),
     path('user-to-group/', UserToGroupViewSet.as_view({'post': 'assign_group'}), name='user-to-group'),
+    path('logout/', LogoutView.as_view(), name='logout'),
 ]
 
 

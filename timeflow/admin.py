@@ -11,11 +11,10 @@ class UserLoginLogAdmin(admin.ModelAdmin):
         'device_type',
         'os_type',
         'browser',
-        'login_status',
+        'user_agent'
     )
     
     list_filter = (
-        'login_status',
         'device_type',
         'os_type',
         'browser',
@@ -25,7 +24,7 @@ class UserLoginLogAdmin(admin.ModelAdmin):
     search_fields = (
         'user__username',
         'ip_address',
-        'location'
+        'user_agent'
     )
     
     readonly_fields = (
@@ -39,7 +38,7 @@ class UserLoginLogAdmin(admin.ModelAdmin):
     
     fieldsets = (
         ('اطلاعات کاربر', {
-            'fields': ('user', 'login_status')
+            'fields': ('user',)
         }),
         ('زمان‌بندی', {
             'fields': ('time',)
@@ -47,7 +46,7 @@ class UserLoginLogAdmin(admin.ModelAdmin):
         ('اطلاعات سیستم', {
             'fields': ('ip_address', 'device_type', 'os_type', 'browser')
         }),
-        ('اطلاعات تکمیلی', {
+        ('اطلاعات تکمیلی', {    
             'fields': ('user_agent',),
             'classes': ('collapse',)
         })
