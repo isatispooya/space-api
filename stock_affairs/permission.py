@@ -3,35 +3,72 @@ from stock_affairs.models import Shareholders, Precedence, UnusedPrecedencePurch
 
 class IsShareholder(BasePermission):
     def has_permission(self, request, view):
-        try:
-            shareholder = Shareholders.objects.filter(name__user=request.user)
-            return shareholder.exists()
-        except:
-            return False
+        shareholder = Shareholders.objects.filter(user=request.user)
+        return shareholder.exists()
         
+    @property
+    def get_permission_name(self):
+        return "shareholder"
+    
+    def get_permission_data(self, request, view):
+        has_perm = self.has_permission(request, view)
+        print(has_perm)
+        if has_perm:
+            return {
+                "name": self.get_permission_name,
+                "has_permission": True,
+                "codename": self.get_permission_name
+            }
+        return None
+
+
 class IsPrecedence(BasePermission):
     def has_permission(self, request, view):
-        try:
-            precedence = Precedence.objects.filter(position__user=request.user)
-            return precedence.exists()
-        except:
-            return False
+        precedence = Precedence.objects.filter(user=request.user)
+        return precedence.exists()
+
+
+    @property
+    def get_permission_name(self):
+        return "precedence"
+
+    def get_permission_data(self, request, view):
+        has_perm = self.has_permission(request, view)
+        if has_perm:
+            return {
+                "name": self.get_permission_name,
+                "has_permission": True,
+                "codename": self.get_permission_name
+            }
+        return None
 
 class IsUnusedPrecedencePurchase(BasePermission):
     def has_permission(self, request, view):
-        try:
-            unused_precedence_purchase = UnusedPrecedencePurchase.objects.filter(is_active=True, amount__gt=0)
-            return unused_precedence_purchase.exists()
-        except:
-            return False
+        unused_precedence_purchase = UnusedPrecedencePurchase.objects.filter(
+            requested_amount__gt=0
+        )
+        return unused_precedence_purchase.exists()
+
+
+    @property
+    def get_permission_name(self):
+        return "unused_precedence_purchase"
+
+    def get_permission_data(self, request, view):
+        has_perm = self.has_permission(request, view)
+        if has_perm:
+            return {
+                "name": self.get_permission_name,
+                "has_permission": True,
+                "codename": self.get_permission_name
+            }
+        return None
 
 class IsUnusedPrecedenceProcess(BasePermission):
     def has_permission(self, request, view):
-        try:
-            unused_precedence_process = UnusedPrecedenceProcess.objects.filter(is_active=True, used_amount__gt=0)
-            return unused_precedence_process.exists()
-        except:
-            return False
+        unused_precedence_process = UnusedPrecedenceProcess.objects.filter(is_active=True, used_amount__gt=0)
+        return unused_precedence_process.exists()
+
 
     @property
     def get_permission_name(self):
@@ -42,6 +79,7 @@ class IsUnusedPrecedenceProcess(BasePermission):
         if has_perm:
             return {
                 "name": self.get_permission_name,
-                "has_permission": True
+                "has_permission": True,
+                "codename": self.get_permission_name
             }
         return None

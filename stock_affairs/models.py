@@ -6,7 +6,7 @@ from user.models import User
 
 
 class Shareholders(models.Model):
-    name = models.ForeignKey(
+    user = models.ForeignKey(
         User, 
         on_delete=models.CASCADE,
         verbose_name="نام سهامدار"
@@ -80,8 +80,8 @@ class StockTransfer(models.Model):
 
 
 class Precedence(models.Model):
-    position = models.ForeignKey(
-        Position, 
+    user = models.ForeignKey(
+        User, 
         on_delete=models.CASCADE,
         verbose_name="کاربر"
     )
@@ -110,7 +110,7 @@ class Precedence(models.Model):
         ]
 
     def __str__(self):
-        return f"{self.position} - {self.company}"
+        return f"{self.user} - {self.company}"
 
 
 class CapitalIncreasePayment(models.Model):
@@ -118,8 +118,8 @@ class CapitalIncreasePayment(models.Model):
         upload_to='stock_affairs/documents/',
         verbose_name="سند"
     )
-    position = models.ForeignKey(
-        Position, 
+    user = models.ForeignKey(
+        User, 
         on_delete=models.CASCADE,
         verbose_name="کاربر"
     )
@@ -147,18 +147,18 @@ class CapitalIncreasePayment(models.Model):
         ]
 
     def __str__(self):
-        return f"{self.position} - {self.company}"
+        return f"{self.user} - {self.company}"
 
 
 class DisplacementPrecedence(models.Model):
     seller = models.ForeignKey(
-        Position, 
+        User, 
         on_delete=models.CASCADE, 
         related_name='precedence_sales',
         verbose_name="فروشنده"
     )
     buyer = models.ForeignKey(
-        Position, 
+        User, 
         on_delete=models.CASCADE, 
         related_name='precedence_purchases',
         verbose_name="خریدار"

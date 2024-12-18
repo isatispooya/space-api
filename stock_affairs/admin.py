@@ -37,7 +37,7 @@ class UnusedPrecedencePurchaseAdmin(admin.ModelAdmin):
 
 @admin.register(UnusedPrecedenceProcess)
 class UnusedPrecedenceProcessAdmin(admin.ModelAdmin):
-    list_display = ['company' , 'total_amount' , 'used_amount' , 'price' , 'end_date']
+    list_display = ['company' , 'total_amount' , 'used_amount' , 'price' , 'end_date' , 'is_active']
     list_filter = ['company' , 'end_date' , 'created_at']
     search_fields = ['company']
     list_per_page = 100
