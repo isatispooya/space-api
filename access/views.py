@@ -32,12 +32,22 @@ class SetUserPermissionView(APIView):
 
 
 class PermissionListForUserView(APIView):
-    permission_classes = [IsAuthenticated | IsAdminUser]
+    permission_classes = [IsAuthenticated]
     def get(self, request):
         user = request.user
-        if user.is_staff:
-            permissions = user.user_permissions.all()
+        if user.is_superuser or user.is_staff:
+            permission_names = user.get_all_permissions()
+            """
+                این خط دسترسی‌های کاربر را به صورت کد نام فیلتر می‌کند
+                permission_names شامل دسترسی‌ها به فرمت "app_label.codename" است
+                با split('.') آن را جدا کرده و آخرین بخش که همان codename است را برمی‌داریم
+            
+            """
+            permissions = Permission.objects.filter(
+                codename__in=[perm.split('.')[-1] for perm in permission_names]
+            )
         else:
             permissions = user.user_permissions.all()
+        
         serializer = PermissionSerializer(permissions, many=True)
         return Response(serializer.data)
