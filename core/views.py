@@ -36,22 +36,23 @@ class ShortCutView(viewsets.ModelViewSet):
     
 
 
+# menu view
 class MenuView(APIView):
     permission_classes = [IsAuthenticated]
 
 
     def menu_stock_affairs(self, request):
-        main = {'title': 'امور سهام','path': '/stock_affairs'}
+        main = {'title': 'امور سهام','path': ''}
         sub_menu = []
 
         if IsShareholder().has_permission(request, self) or request.user.is_staff:
-            sub_menu.append({'title': 'سهام','path': '/stock_affairs/stock'})
+            sub_menu.append({'title': 'سهام','path': '/shareholders/'})
 
         if IsPrecedence().has_permission(request, self) or request.user.is_staff:
-            sub_menu.append({'title': 'حق تقدم','path': '/stock_affairs/precedence'})
+            sub_menu.append({'title': 'حق تقدم','path': '/precendence/'})
 
         if IsUnusedPrecedencePurchase().has_permission(request, self) or request.user.is_staff:
-            sub_menu.append({'title': 'خرید حق تقدم استفاده نشده','path': '/stock_affairs/unused_precedence_purchase'})
+            sub_menu.append({'title': 'خرید حق تقدم استفاده نشده','path': '/purchacePrecendence/'})
 
         if len(sub_menu)>0:
             main['sub_menu'] = sub_menu
@@ -60,7 +61,25 @@ class MenuView(APIView):
             return None
 
     def menu_correspondence(self, request):
-        return {'title': 'مکاتبات', 'path': '/correspondence'}
+        return {'title': 'مکاتبات', 'path': '/correspondence/'}
+    
+    def menu_positions(self, request):
+        if request.user.is_staff:
+            return {'title': 'نقش‌ها', 'path': '/positions/'}
+        else:
+            return None
+        
+    def menu_permissions(self, request):
+        if request.user.is_staff:
+            return {'title': 'دسترسی ها', 'path': '/permissions/'}
+        else:
+            return None
+
+    def menu_groups(self, request):
+        if request.user.is_staff:
+            return {'title': 'گروه ها', 'path': '/groups/'}
+        else:
+            return None
 
     def get(self, request):
         self.menu_items = []
@@ -70,13 +89,21 @@ class MenuView(APIView):
             'path': '/',
         }
         self.menu_items.append(home)
-        # stock_affairs
         stock_affairs = self.menu_stock_affairs(request)
         correspondence = self.menu_correspondence(request)
+        positions = self.menu_positions(request)
+        permissions = self.menu_permissions(request)
+        groups = self.menu_groups(request)
         if stock_affairs:
             self.menu_items.append(stock_affairs)
         if correspondence:
             self.menu_items.append(correspondence)
+        if positions:
+            self.menu_items.append(positions)
+        if permissions:
+            self.menu_items.append(permissions)
+        if groups:
+            self.menu_items.append(groups)
 
 
 
