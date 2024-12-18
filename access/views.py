@@ -37,21 +37,20 @@ class PermissionListForUserView(APIView):
         user = request.user
         if user.is_superuser or user.is_staff:
             permission_names = user.get_all_permissions()
-            """
-                این خط دسترسی‌های کاربر را به صورت کد نام فیلتر می‌کند
-                permission_names شامل دسترسی‌ها به فرمت "app_label.codename" است
-                با split('.') آن را جدا کرده و آخرین بخش که همان codename است را برمی‌داریم
-
-            """
             permissions = Permission.objects.filter(
                 codename__in=[perm.split('.')[-1] for perm in permission_names]
             )
         else:
             permissions = user.user_permissions.all()
-        unused_precedence_process_perm = IsUnusedPrecedenceProcess()
-        permissions.append({
-            "name": unused_precedence_process_perm.get_permission_name,
-            "has_permission": unused_precedence_process_perm.get_permission_name,
-        })
+            
         serializer = PermissionSerializer(permissions, many=True)
-        return Response(serializer.data)
+        
+        response_data = serializer.data
+        
+        unused_precedence_process_perm = IsUnusedPrecedenceProcess()
+        response_data.append({
+            "name": unused_precedence_process_perm.get_permission_name,
+            "codename": unused_precedence_process_perm.get_permission_name,
+        })
+        
+        return Response(response_data)

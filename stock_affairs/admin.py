@@ -46,7 +46,7 @@ class UnusedPrecedenceProcessAdmin(admin.ModelAdmin):
     list_select_related = ['company']
     fieldsets = [
         ('اطلاعات اصلی', {
-            'fields': ['company' , 'total_amount' , 'used_amount' , 'price']
+            'fields': ['company' , 'total_amount' , 'used_amount' , 'price' , 'is_active']
         }),
         ('تاریخ‌ها', {
             'fields': ['end_date']
