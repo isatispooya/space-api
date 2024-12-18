@@ -1,6 +1,6 @@
 from django.shortcuts import render
 from rest_framework.views import APIView
-from rest_framework.permissions import IsAdminUser
+from rest_framework.permissions import IsAuthenticated , IsAdminUser
 from django.contrib.auth.models import Permission
 from .serializer import PermissionSerializer
 from rest_framework.response import Response
@@ -16,8 +16,6 @@ class PermissionListView(APIView):
         return Response(serializer.data)
     
 
-
-
 class SetUserPermissionView(APIView):
     permission_classes = [IsAdminUser]
     def post(self, request):
@@ -32,3 +30,14 @@ class SetUserPermissionView(APIView):
         user.save()
         return Response({"message": "Permission set successfully"})
 
+
+class PermissionListForUserView(APIView):
+    permission_classes = [IsAuthenticated | IsAdminUser]
+    def get(self, request):
+        user = request.user
+        if user.is_staff:
+            permissions = user.user_permissions.all()
+        else:
+            permissions = user.user_permissions.all()
+        serializer = PermissionSerializer(permissions, many=True)
+        return Response(serializer.data)
