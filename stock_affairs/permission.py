@@ -32,3 +32,7 @@ class IsUnusedPrecedenceProcess(BasePermission):
             return unused_precedence_process.exists()
         except:
             return False
+
+    @property
+    def get_permission_name(self):
+        return "unused_precedence_process"

@@ -5,7 +5,7 @@ from django.contrib.auth.models import Permission
 from .serializer import PermissionSerializer
 from rest_framework.response import Response
 from user.models import User
-
+from stock_affairs.permission import IsUnusedPrecedenceProcess
 
 
 class PermissionListView(APIView):
@@ -48,6 +48,10 @@ class PermissionListForUserView(APIView):
             )
         else:
             permissions = user.user_permissions.all()
-        
+        unused_precedence_process_perm = IsUnusedPrecedenceProcess()
+        permissions.append({
+            "name": unused_precedence_process_perm.get_permission_name,
+            "has_permission": unused_precedence_process_perm.get_permission_name,
+        })
         serializer = PermissionSerializer(permissions, many=True)
         return Response(serializer.data)
