@@ -9,7 +9,7 @@ class UserLoginLog(models.Model):
     )
     # زمان و تاریخ
     time = models.DateTimeField(default=timezone.now)
-    type = models.CharField(max_length=10 , choices=[('login' , 'ورود') , ('logout' , 'خروج')])
+    type = models.CharField(max_length=10 , choices=[('login' , 'ورود') , ('logout' , 'خروج')  , ('register' , 'ثبت نام') , ('refresh' , 'تازه سازی')])
     # اطلاعات سیستم
     ip_address = models.GenericIPAddressField()
     device_type = models.CharField(max_length=200 , null=True , blank=True)  # موبایل/دسکتاپ
