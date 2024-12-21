@@ -17,6 +17,7 @@ urlpatterns = [
     path('correspondence/', include('correspondence.urls')),
     path('stock_affairs/' , include('stock_affairs.urls')),
     path('core/' , include('core.urls')),
+    path('timeflow/' , include('timeflow.urls')),
 ]
 
 # سرو فایل‌های استاتیک و مدیا در هر حالت
