@@ -3,11 +3,24 @@ from rest_framework.response import Response
 from rest_framework import status
 from django.db.models.functions import TruncDate
 from .models import UserLoginLog
+from rest_framework.permissions import IsAuthenticated
 
 class UserLoginLogAPIView(APIView):
+    """
+    این API گزارش ورود و خروج کاربران را نمایش می‌دهد.
+    برای هر روز:
+    - اولین ورود
+    - آخرین خروج
+    - و جفت‌های ورود-خروج میانی را برمی‌گرداند
+    """
+    permission_classes = [IsAuthenticated]
+
     def get(self, request):
         try:
-            logs = UserLoginLog.objects.annotate(
+            logs = UserLoginLog.objects.filter(
+                user=request.user,
+                type__in=['login', 'logout'] 
+            ).annotate(
                 date=TruncDate('time')
             ).order_by('date', 'time')
 
@@ -23,41 +36,37 @@ class UserLoginLogAPIView(APIView):
                         'intermediate_logs': []
                     }
 
-                # ثبت اولین ورود روز
                 if log.type == 'login' and result[date_str]['first_login'] is None:
                     result[date_str]['first_login'] = {
                         'time': log.time.strftime('%H:%M:%S'),
                         'id': log.id,
                         'ip': log.ip_address,
                         'device': log.device_type,
-                        'browser': log.browser
+                        'browser': log.browser,
+                        'os': log.os_type
                     }
 
-                # بررسی و ثبت خروج‌ها و ورودهای مربوطه
                 if log.type == 'logout':
-                    # پیدا کردن آخرین خروج قبل از این خروج
                     previous_logout = UserLoginLog.objects.filter(
                         time__lt=log.time,
                         time__gte=log.date,
                         type='logout',
-                        user=log.user
+                        user=request.user
                     ).last()
 
-                    # اگر خروج قبلی وجود داشت، دنبال اولین ورود بعد از آن بگرد
-                    # اگر خروج قبلی نبود، دنبال اولین ورود روز بگرد
                     if previous_logout:
                         related_login = UserLoginLog.objects.filter(
                             time__gt=previous_logout.time,
                             time__lt=log.time,
                             type='login',
-                            user=log.user
+                            user=request.user
                         ).first()
                     else:
                         related_login = UserLoginLog.objects.filter(
                             time__lt=log.time,
                             time__gte=log.date,
                             type='login',
-                            user=log.user
+                            user=request.user
                         ).first()
 
                     if related_login:
@@ -67,24 +76,26 @@ class UserLoginLogAPIView(APIView):
                                 'id': related_login.id,
                                 'ip': related_login.ip_address,
                                 'device': related_login.device_type,
-                                'browser': related_login.browser
+                                'browser': related_login.browser,
+                                'os': related_login.os_type
                             },
                             'logout': {
                                 'time': log.time.strftime('%H:%M:%S'),
                                 'id': log.id,
                                 'ip': log.ip_address,
                                 'device': log.device_type,
-                                'browser': log.browser
+                                'browser': log.browser,
+                                'os': log.os_type
                             }
                         })
 
-                    # آپدیت آخرین خروج روز
                     result[date_str]['last_logout'] = {
                         'time': log.time.strftime('%H:%M:%S'),
                         'id': log.id,
                         'ip': log.ip_address,
                         'device': log.device_type,
-                        'browser': log.browser
+                        'browser': log.browser,
+                        'os': log.os_type
                     }
 
             return Response(result, status=status.HTTP_200_OK)
