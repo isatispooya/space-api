@@ -14,7 +14,7 @@ from stock_affairs.permission import IsShareholder , IsPrecedence , IsUnusedPrec
 class ShareholdersViewset(viewsets.ModelViewSet):
     queryset = Shareholders.objects.all()
     serializer_class = ShareholdersSerializer
-    permission_classes = [IsAuthenticated , IsShareholder]
+    permission_classes = [IsAuthenticated , IsShareholder | IsAdminUser]
 
     def get_permissions(self):
         if self.action in ['create', 'update', 'partial_update', 'destroy']:

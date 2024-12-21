@@ -36,7 +36,11 @@ class Number(models.Model):
         default=timezone.now,
         verbose_name="تاریخ ایجاد"
     )
-    jalali_year = models.IntegerField( verbose_name="سال شماره", editable=False)
+    jalali_year = models.IntegerField(
+        verbose_name="سال شمسی",
+        null=True,
+        blank=True
+    )
     company_registration = models.CharField(max_length=20, verbose_name="شماره ثبت", editable=False)
     internal_correspondence = models.BooleanField(default=False, verbose_name="مکاتبه داخلی", editable=False)
 

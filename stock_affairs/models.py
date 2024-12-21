@@ -37,7 +37,7 @@ class Shareholders(models.Model):
         ]
 
     def __str__(self):
-        return f"{self.name} - {self.company}"
+        return f"{self.user.username} - {self.company}"
 
 
 class StockTransfer(models.Model):
@@ -353,6 +353,6 @@ class UnusedPrecedencePurchase(models.Model):
         ]
 
     def __str__(self):
-        return f"{self.user} - {self.company}"
+        return f"{self.user}"
 
 

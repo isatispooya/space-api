@@ -3,6 +3,8 @@ from stock_affairs.models import Shareholders, Precedence, UnusedPrecedencePurch
 
 class IsShareholder(BasePermission):
     def has_permission(self, request, view):
+        if request.user.is_staff:
+            return True
         shareholder = Shareholders.objects.filter(user=request.user)
         return shareholder.exists()
         
@@ -24,6 +26,8 @@ class IsShareholder(BasePermission):
 
 class IsPrecedence(BasePermission):
     def has_permission(self, request, view):
+        if request.user.is_staff:
+            return True
         precedence = Precedence.objects.filter(user=request.user)
         return precedence.exists()
 
@@ -44,6 +48,8 @@ class IsPrecedence(BasePermission):
 
 class IsUnusedPrecedencePurchase(BasePermission):
     def has_permission(self, request, view):
+        if request.user.is_staff:
+            return True
         unused_precedence_purchase = UnusedPrecedencePurchase.objects.filter(
             requested_amount__gt=0
         )
@@ -66,6 +72,8 @@ class IsUnusedPrecedencePurchase(BasePermission):
 
 class IsUnusedPrecedenceProcess(BasePermission):
     def has_permission(self, request, view):
+        if request.user.is_staff:
+            return True
         unused_precedence_process = UnusedPrecedenceProcess.objects.filter(is_active=True, used_amount__gt=0)
         return unused_precedence_process.exists()
 
