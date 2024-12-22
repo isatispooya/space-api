@@ -73,8 +73,8 @@ REST_FRAMEWORK = {
         'rest_framework.throttling.UserRateThrottle'
     ],
     'DEFAULT_THROTTLE_RATES': {
-        'anon': '30/minute',  # محدودیت برای کاربران ناشناس
-        'user': '30/minute'  # محدودیت برای کاربران احراز هویت شده
+        'anon': '100/minute',  # محدودیت برای کاربران ناشناس
+        'user': '1000/minute'  # محدودیت برای کاربران احراز هویت شده
     }
 }
 

@@ -9,6 +9,7 @@ from django.db.models import Q
 from django.core.exceptions import ValidationError
 from stock_affairs.permission import IsShareholder , IsPrecedence , IsUnusedPrecedencePurchase , IsUnusedPrecedenceProcess
 from django.db import transaction
+from django.utils import timezone
 
 
 
@@ -110,10 +111,13 @@ class StockTransferViewset(viewsets.ModelViewSet):
                         seller_shares.number_of_shares += abs(difference)
                         buyer_shares.number_of_shares -= abs(difference)
                     
+                    seller_shares.updated_at = timezone.now()
+                    buyer_shares.updated_at = timezone.now()
                     seller_shares.save()
                     buyer_shares.save()
                     
                     instance.number_of_shares = new_number_of_shares
+                    instance.updated_at = timezone.now()
                     instance.save()
                 
                 return Response(serializer.data, status=status.HTTP_200_OK)
