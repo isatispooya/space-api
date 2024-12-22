@@ -52,6 +52,11 @@ class StockTransfer(models.Model):
         related_name='stock_purchases',
         verbose_name="خریدار"
     )
+    company = models.ForeignKey(
+        Company, 
+        on_delete=models.CASCADE,
+        verbose_name="شرکت"
+    )
     number_of_shares = models.BigIntegerField(verbose_name="تعداد سهام")
     document = models.FileField(
         upload_to='stock_affairs/documents/',
@@ -76,6 +81,8 @@ class StockTransfer(models.Model):
         indexes = [
             models.Index(fields=['created_at']),
         ]
+    def __str__(self):
+        return f"{self.seller} - {self.buyer} - {self.company}"
 
 
 class Precedence(models.Model):
@@ -353,5 +360,6 @@ class UnusedPrecedencePurchase(models.Model):
 
     def __str__(self):
         return f"{self.user}"
+
 
 

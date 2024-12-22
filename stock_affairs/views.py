@@ -8,6 +8,7 @@ from rest_framework import status
 from django.db.models import Q
 from django.core.exceptions import ValidationError
 from stock_affairs.permission import IsShareholder , IsPrecedence , IsUnusedPrecedencePurchase , IsUnusedPrecedenceProcess
+from django.db import transaction
 
 
 
@@ -20,7 +21,7 @@ class ShareholdersViewset(viewsets.ModelViewSet):
         if self.action in ['create', 'update', 'partial_update', 'destroy']:
             self.permission_classes = [IsAdminUser]
         elif not self.request.user.is_staff:
-            self.queryset = Shareholders.objects.filter(name__user=self.request.user)
+            self.queryset = Shareholders.objects.filter(user=self.request.user)
         return super().get_permissions()
     
 
@@ -28,15 +29,160 @@ class StockTransferViewset(viewsets.ModelViewSet):
     queryset = StockTransfer.objects.all()
     serializer_class = StockTransferSerializer
     permission_classes = [IsAuthenticated]
+    http_method_names = ['get', 'post', 'patch', 'delete']
 
     def get_permissions(self):
         if self.action in ['create', 'update', 'partial_update', 'destroy']:
             self.permission_classes = [IsAdminUser]
         elif not self.request.user.is_staff:
             self.queryset = StockTransfer.objects.filter(
-                Q(buyer__user=self.request.user) | Q(seller__user=self.request.user)
+                Q(buyer=self.request.user) | Q(seller=self.request.user)
             )
         return super().get_permissions()
+    
+    def create(self, request):
+        serializer = self.get_serializer(data=request.data)
+        serializer.is_valid(raise_exception=True)
+        
+        # بررسی موجودی سهام فروشنده
+        seller_shares = Shareholders.objects.filter(user=serializer.validated_data['seller'],company=serializer.validated_data['company']).first()
+        
+        if not seller_shares or seller_shares.number_of_shares < serializer.validated_data['number_of_shares']:
+            raise ValidationError({"error": "تعداد سهام فروشنده کافی نیست"})
+
+        # ذخیره انتقال سهام
+        self.perform_create(serializer)
+        
+        # به‌روزرسانی سهام فروشنده
+        seller_shares.number_of_shares -= serializer.validated_data['number_of_shares']
+        seller_shares.save()
+        
+        # به‌روزرسانی یا ایجاد سهام خریدار
+        buyer_shares = Shareholders.objects.filter(user=serializer.validated_data['buyer'],company=serializer.validated_data['company']).first()
+        
+        if buyer_shares:
+            buyer_shares.number_of_shares += serializer.validated_data['number_of_shares']
+            buyer_shares.save()
+        else:
+            Shareholders.objects.create(
+                user=serializer.validated_data['buyer'],
+                company=serializer.validated_data['company'],
+                number_of_shares=serializer.validated_data['number_of_shares']
+            )
+
+        headers = self.get_success_headers(serializer.data)
+        return Response(serializer.data, status=status.HTTP_201_CREATED, headers=headers)
+
+    @transaction.atomic
+    def partial_update(self, request, *args, **kwargs):
+        if request.user.is_staff:
+            try:
+                instance = self.get_object()
+                old_number_of_shares = instance.number_of_shares
+                
+                serializer = self.get_serializer(instance, data=request.data, partial=True)
+                serializer.is_valid(raise_exception=True)
+                
+                new_number_of_shares = serializer.validated_data.get('number_of_shares')
+                
+                if new_number_of_shares is None:
+                    return Response(serializer.data, status=status.HTTP_200_OK)
+                
+                difference = new_number_of_shares - old_number_of_shares
+                
+                if difference != 0:
+                    seller_shares = Shareholders.objects.select_for_update().get(
+                        user=instance.seller,
+                        company=instance.company
+                    )
+                    
+                    buyer_shares = Shareholders.objects.select_for_update().get(
+                        user=instance.buyer,
+                        company=instance.company
+                    )
+                    
+                    if difference > 0:  # افزایش تعداد سهام
+                        if seller_shares.number_of_shares < difference:
+                            raise ValidationError({"error": "تعداد سهام فروشنده کافی نیست"})
+                        seller_shares.number_of_shares -= difference
+                        buyer_shares.number_of_shares += difference
+                    else:  # کاهش تعداد سهام
+                        seller_shares.number_of_shares += abs(difference)
+                        buyer_shares.number_of_shares -= abs(difference)
+                    
+                    seller_shares.save()
+                    buyer_shares.save()
+                    
+                    instance.number_of_shares = new_number_of_shares
+                    instance.save()
+                
+                return Response(serializer.data, status=status.HTTP_200_OK)
+                
+            except Shareholders.DoesNotExist:
+                return Response(
+                    {"error": "سهامدار مورد نظر یافت نشد"}, 
+                    status=status.HTTP_404_NOT_FOUND
+                )
+            except Exception as e:
+                return Response(
+                    {"error": str(e)}, 
+                    status=status.HTTP_400_BAD_REQUEST
+                )
+        else:
+            return Response(
+                {"error": "شما اجازه ویرایش را ندارید"}, 
+                status=status.HTTP_403_FORBIDDEN
+            )
+
+    @transaction.atomic
+    def destroy(self, request, *args, **kwargs):
+        if request.user.is_staff:
+            try:
+                instance = self.get_object()
+                
+                # بازگرداندن سهام به فروشنده و کم کردن از خریدار
+                seller_shares = Shareholders.objects.select_for_update().get(
+                    user=instance.seller,
+                    company=instance.company
+                )
+                
+                buyer_shares = Shareholders.objects.select_for_update().get(
+                    user=instance.buyer,
+                    company=instance.company
+                )
+                
+                # برگرداندن سهام به فروشنده
+                seller_shares.number_of_shares += instance.number_of_shares
+                # کم کردن سهام از خریدار
+                buyer_shares.number_of_shares -= instance.number_of_shares
+                
+                seller_shares.save()
+                buyer_shares.save()
+                
+                # حذف رکورد انتقال سهام
+                instance.delete()
+                
+                return Response(
+                    {"message": "انتقال سهام با موفقیت حذف شد"}, 
+                    status=status.HTTP_204_NO_CONTENT
+                )
+                
+            except Shareholders.DoesNotExist:
+                return Response(
+                    {"error": "سهامدار مورد نظر یافت نشد"}, 
+                    status=status.HTTP_404_NOT_FOUND
+                )
+            except Exception as e:
+                return Response(
+                    {"error": str(e)}, 
+                    status=status.HTTP_400_BAD_REQUEST
+                )
+        else:
+            return Response(
+                {"error": "شما اجازه حذف را ندارید"}, 
+                status=status.HTTP_403_FORBIDDEN
+            )
+
 
 
 class PrecedenceViewset(viewsets.ModelViewSet):
@@ -70,7 +216,6 @@ class DisplacementPrecedenceViewset(viewsets.ModelViewSet):
         if self.action in ['create', 'update', 'partial_update', 'destroy']:
             self.permission_classes = [IsAdminUser]
         return super().get_permissions()
-
 # خرید از فرایند
 class UnusedPrecedencePurchaseViewset(viewsets.ModelViewSet):
     queryset = UnusedPrecedencePurchase.objects.all()
