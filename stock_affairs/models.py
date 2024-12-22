@@ -97,7 +97,6 @@ class Precedence(models.Model):
         verbose_name="شرکت"
     )
     precedence = models.BigIntegerField(verbose_name="حق تقدم")
-    used_precedence = models.BigIntegerField(verbose_name="حق تقدم استفاده شده")
     created_at = models.DateTimeField(
         default=timezone.now,
         verbose_name="تاریخ ایجاد"
@@ -124,18 +123,13 @@ class CapitalIncreasePayment(models.Model):
         upload_to='stock_affairs/documents/',
         verbose_name="سند"
     )
-    user = models.ForeignKey(
-        User, 
+    precedence = models.ForeignKey(
+        Precedence, 
         on_delete=models.CASCADE,
-        verbose_name="کاربر"
+        verbose_name="حق تقدم"
     )
-    company = models.ForeignKey(
-        Company, 
-        on_delete=models.CASCADE,
-        verbose_name="شرکت"
-    )
-    number_of_shares = models.BigIntegerField(verbose_name="تعداد سهام")
-    price = models.BigIntegerField(verbose_name="قیمت")
+    amount = models.BigIntegerField(verbose_name="مقدار")
+    value = models.BigIntegerField(verbose_name="قیمت")
     created_at = models.DateTimeField(
         default=timezone.now,
         verbose_name="تاریخ ایجاد"
@@ -145,15 +139,15 @@ class CapitalIncreasePayment(models.Model):
         verbose_name="تاریخ به‌روزرسانی"
     )
     class Meta:
-        verbose_name = "پرداخت افزایش سرمایه"
-        verbose_name_plural = "پرداخت‌های افزایش سرمایه"
+        verbose_name = "پرداخت حق تقدم"
+        verbose_name_plural = "پرداخت‌های حق تقدم"
         ordering = ['-created_at']
         indexes = [
             models.Index(fields=['created_at']),
         ]
 
     def __str__(self):
-        return f"{self.user} - {self.company}"
+        return f"{self.precedence}"
 
 
 class DisplacementPrecedence(models.Model):

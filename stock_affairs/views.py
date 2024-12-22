@@ -10,6 +10,8 @@ from django.core.exceptions import ValidationError
 from stock_affairs.permission import IsShareholder , IsPrecedence , IsUnusedPrecedencePurchase , IsUnusedPrecedenceProcess
 from django.db import transaction
 from django.utils import timezone
+from django.db import models
+from rest_framework.exceptions import ValidationError
 
 
 
@@ -203,12 +205,72 @@ class PrecedenceViewset(viewsets.ModelViewSet):
 class CapitalIncreasePaymentViewset(viewsets.ModelViewSet):
     queryset = CapitalIncreasePayment.objects.all()
     serializer_class = CapitalIncreasePaymentSerializer
-    permission_classes = [IsAuthenticated , IsPrecedence]
+    permission_classes = [IsAuthenticated, IsPrecedence]
 
     def get_permissions(self):
         if self.action in ['create', 'update', 'partial_update', 'destroy']:
             self.permission_classes = [IsAdminUser]
         return super().get_permissions()
+
+    def _check_amount_validity(self, precedence, new_amount, instance=None):
+        # محاسبه مجموع پرداخت‌های قبلی
+        total_previous_payments = CapitalIncreasePayment.objects.filter(
+            precedence=precedence
+        ).aggregate(total=models.Sum('amount'))['total'] or 0
+
+        # اگر در حال آپدیت هستیم، مقدار فعلی را از مجموع کم می‌کنیم
+        if instance:
+            total_previous_payments -= instance.amount
+
+        # محاسبه مقدار باقی‌مانده
+        remaining_precedence = precedence.precedence - total_previous_payments
+
+        # بررسی اینکه آیا مقدار درخواستی از باقی‌مانده بیشتر است
+        if new_amount > remaining_precedence:
+            raise ValidationError({
+                "error": f"مقدار درخواستی ({new_amount}) از مقدار باقی‌مانده حق تقدم ({remaining_precedence}) بیشتر است"
+            })
+
+    def create(self, request, *args, **kwargs):
+        serializer = self.get_serializer(data=request.data)
+        serializer.is_valid(raise_exception=True)
+        
+        precedence = serializer.validated_data['precedence']
+        new_amount = serializer.validated_data['amount']
+
+        self._check_amount_validity(precedence, new_amount)
+
+        self.perform_create(serializer)
+        headers = self.get_success_headers(serializer.data)
+        return Response(serializer.data, status=status.HTTP_201_CREATED, headers=headers)
+
+    def update(self, request, *args, **kwargs):
+        partial = kwargs.pop('partial', False)
+        instance = self.get_object()
+        serializer = self.get_serializer(instance, data=request.data, partial=partial)
+        serializer.is_valid(raise_exception=True)
+
+        # اگر مقدار amount تغییر کرده باشد، بررسی اعتبارسنجی را انجام می‌دهیم
+        if 'amount' in serializer.validated_data:
+            new_amount = serializer.validated_data['amount']
+            precedence = serializer.validated_data.get('precedence', instance.precedence)
+            self._check_amount_validity(precedence, new_amount, instance)
+
+        self.perform_update(serializer)
+        return Response(serializer.data)
+
+    def destroy(self, request, *args, **kwargs):
+        instance = self.get_object()
+        instance_str = str(instance)  # ذخیره اطلاعات قبل از حذف
+        
+        self.perform_destroy(instance)
+        
+        return Response({
+            "message": f"پرداخت حق تقدم {instance_str} با موفقیت حذف شد",
+            "status": "success"
+        }, status=status.HTTP_200_OK)
+
+
 
 
 class DisplacementPrecedenceViewset(viewsets.ModelViewSet):
