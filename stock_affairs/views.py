@@ -220,6 +220,154 @@ class DisplacementPrecedenceViewset(viewsets.ModelViewSet):
         if self.action in ['create', 'update', 'partial_update', 'destroy']:
             self.permission_classes = [IsAdminUser]
         return super().get_permissions()
+    
+    def create(self, request):
+        serializer = self.get_serializer(data=request.data)
+        serializer.is_valid(raise_exception=True)
+        
+        # بررسی موجودی حق تقدم فروشنده
+        seller_precedence = Precedence.objects.filter(user=serializer.validated_data['seller'],company=serializer.validated_data['company']).first()
+        
+        if not seller_precedence or seller_precedence.precedence < serializer.validated_data['number_of_shares']:
+            raise ValidationError({"error": "تعداد حق تقدم فروشنده کافی نیست"})
+
+        # ذخیره انتقال حق تقدم
+        self.perform_create(serializer)
+        
+        # به‌روزرسانی حق تقدم فروشنده
+        seller_precedence.precedence -= serializer.validated_data['number_of_shares']
+        seller_precedence.save()
+        
+        # به‌روزرسانی یا ایجاد حق تقدم خریدار
+        buyer_precedence = Precedence.objects.filter(user=serializer.validated_data['buyer'],company=serializer.validated_data['company']).first()
+        
+        if buyer_precedence:
+            buyer_precedence.precedence += serializer.validated_data['number_of_shares']
+            buyer_precedence.save()
+        else:
+            Precedence.objects.create(
+                user=serializer.validated_data['buyer'],
+                company=serializer.validated_data['company'],
+                precedence=serializer.validated_data['number_of_shares'],
+                used_precedence=0  # مقدار اولیه برای حق تقدم استفاده شده
+            )
+
+        headers = self.get_success_headers(serializer.data)
+        return Response(serializer.data, status=status.HTTP_201_CREATED, headers=headers)
+
+    @transaction.atomic
+    def partial_update(self, request, *args, **kwargs):
+        if request.user.is_staff:
+            try:
+                instance = self.get_object()
+                old_number_of_shares = instance.number_of_shares
+                
+                serializer = self.get_serializer(instance, data=request.data, partial=True)
+                serializer.is_valid(raise_exception=True)
+                
+                new_number_of_shares = serializer.validated_data.get('number_of_shares')
+                
+                if new_number_of_shares is None:
+                    return Response(serializer.data, status=status.HTTP_200_OK)
+                
+                difference = new_number_of_shares - old_number_of_shares
+                
+                if difference != 0:
+                    seller_precedence = Precedence.objects.select_for_update().get(
+                        user=instance.seller,
+                        company=instance.company
+                    )
+                    
+                    buyer_precedence = Precedence.objects.select_for_update().get(
+                        user=instance.buyer,
+                        company=instance.company
+                    )
+                    
+                    if difference > 0:  # افزایش تعداد حق تقدم
+                        if seller_precedence.precedence < difference:
+                            raise ValidationError({"error": "تعداد حق تقدم فروشنده کافی نیست"})
+                        seller_precedence.precedence -= difference
+                        buyer_precedence.precedence += difference
+                    else:  # کاهش تعداد حق تقدم
+                        seller_precedence.precedence += abs(difference)
+                        buyer_precedence.precedence -= abs(difference)
+                    
+                    seller_precedence.updated_at = timezone.now()
+                    buyer_precedence.updated_at = timezone.now()
+                    seller_precedence.save()
+                    buyer_precedence.save()
+                    
+                    instance.number_of_shares = new_number_of_shares
+                    instance.updated_at = timezone.now()
+                    instance.save()
+                
+                return Response(serializer.data, status=status.HTTP_200_OK)
+                
+            except Precedence.DoesNotExist:
+                return Response(
+                    {"error": "حق تقدم مورد نظر یافت نشد"}, 
+                    status=status.HTTP_404_NOT_FOUND
+                )
+            except Exception as e:
+                return Response(
+                    {"error": str(e)}, 
+                    status=status.HTTP_400_BAD_REQUEST
+                )
+        else:
+            return Response(
+                {"error": "شما اجازه ویرایش را ندارید"}, 
+                status=status.HTTP_403_FORBIDDEN
+            )
+
+    @transaction.atomic
+    def destroy(self, request, *args, **kwargs):
+        if request.user.is_staff:
+            try:
+                instance = self.get_object()
+                
+                # بازگرداندن سق تقدم به فروشنده و کم کردن از خریدار
+                seller_precedence = Precedence.objects.select_for_update().get(
+                    user=instance.seller,
+                    company=instance.company
+                )
+                
+                buyer_precedence = Precedence.objects.select_for_update().get(
+                    user=instance.buyer,
+                    company=instance.company
+                )
+                
+                # برگرداندن سق تقدم به فروشنده
+                seller_precedence.precedence += instance.number_of_shares
+                # کم کردن حق تقدم از خریدار
+                buyer_precedence.precedence -= instance.number_of_shares
+                
+                seller_precedence.save()
+                buyer_precedence.save()
+                
+                # حذف رکورد انتقال حق تقدم
+                instance.delete()
+                
+                return Response(
+                    {"message": "انتقال حق تقدم با موفقیت حذف شد"}, 
+                    status=status.HTTP_204_NO_CONTENT
+                )
+                
+            except Precedence.DoesNotExist:
+                return Response(
+                    {"error": "حق تقدم مورد نظر یافت نشد"}, 
+                    status=status.HTTP_404_NOT_FOUND
+                )
+            except Exception as e:
+                return Response(
+                    {"error": str(e)}, 
+                    status=status.HTTP_400_BAD_REQUEST
+                )
+        else:
+            return Response(
+                {"error": "شما اجازه حذف را ندارید"}, 
+                status=status.HTTP_403_FORBIDDEN
+            )
+
 # خرید از فرایند
 class UnusedPrecedencePurchaseViewset(viewsets.ModelViewSet):
     queryset = UnusedPrecedencePurchase.objects.all()
