@@ -1,5 +1,4 @@
 from django.db import models
-from positions.models import Position
 from companies.models import Company
 from django.utils import timezone
 from user.models import User
@@ -42,13 +41,13 @@ class Shareholders(models.Model):
 
 class StockTransfer(models.Model):
     seller = models.ForeignKey(
-        Position, 
+        User, 
         on_delete=models.CASCADE, 
         related_name='stock_sales',
         verbose_name="فروشنده"
     )
     buyer = models.ForeignKey(
-        Position, 
+        User, 
         on_delete=models.CASCADE, 
         related_name='stock_purchases',
         verbose_name="خریدار"
