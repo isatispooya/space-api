@@ -23,6 +23,10 @@ class StockTransferSerializer(serializers.ModelSerializer):
         fields = '__all__'
 
 class PrecedenceSerializer(serializers.ModelSerializer):
+    company_detail = CompanySerializer(source='company', read_only=True)
+    user_detail = UserSerializer(source='user', read_only=True)
+    created_at = serializers.DateTimeField(read_only=True)
+    updated_at = serializers.DateTimeField(read_only=True)
     class Meta:
         model = Precedence
         fields = '__all__'
@@ -33,6 +37,11 @@ class CapitalIncreasePaymentSerializer(serializers.ModelSerializer):
         fields = '__all__'
 
 class DisplacementPrecedenceSerializer(serializers.ModelSerializer):
+    company_detail = CompanySerializer(source='company', read_only=True)
+    buyer_detail = UserSerializer(source='buyer', read_only=True)
+    seller_detail = UserSerializer(source='seller', read_only=True)
+    created_at = serializers.DateTimeField(read_only=True)
+    updated_at = serializers.DateTimeField(read_only=True)
     class Meta:
         model = DisplacementPrecedence
         fields = '__all__'

@@ -35,6 +35,12 @@ class ShareholdersViewset(viewsets.ModelViewSet):
         except (ValueError, TypeError):
             raise ValidationError({"error": "تعداد سهام باید یک عدد صحیح باشد"})
         
+        # بررسی وجود سهامدار در شرکت
+        user = request.data.get('user')
+        company = request.data.get('company')
+        if Shareholders.objects.filter(user=user, company=company).exists():
+            raise ValidationError({"error": "این کاربر قبلاً در این شرکت به عنوان سهامدار ثبت شده است"})
+        
         serializer = self.get_serializer(data=request.data)
         serializer.is_valid(raise_exception=True)
         self.perform_create(serializer)
