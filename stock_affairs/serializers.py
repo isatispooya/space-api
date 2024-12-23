@@ -1,12 +1,23 @@
 from rest_framework import serializers
 from .models import Shareholders , StockTransfer , Precedence , CapitalIncreasePayment , DisplacementPrecedence , UnusedPrecedencePurchase , UnusedPrecedenceProcess
-
+from companies.serializers import CompanySerializer
+from user.serializers import UserSerializer
 class ShareholdersSerializer(serializers.ModelSerializer):
+    company_detail = CompanySerializer(source='company', read_only=True)
+    user_detail = UserSerializer(source='user', read_only=True)
+    created_at = serializers.DateTimeField(read_only=True)
+    updated_at = serializers.DateTimeField(read_only=True)
     class Meta:
         model = Shareholders
         fields = '__all__'
 
 class StockTransferSerializer(serializers.ModelSerializer):
+    created_at = serializers.DateTimeField(read_only=True)
+    updated_at = serializers.DateTimeField(read_only=True)
+    
+    company_detail = CompanySerializer(source='company', read_only=True)
+    buyer_detail = UserSerializer(source='buyer', read_only=True)
+    seller_detail = UserSerializer(source='seller', read_only=True)
     class Meta:
         model = StockTransfer
         fields = '__all__'

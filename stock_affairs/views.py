@@ -27,6 +27,24 @@ class ShareholdersViewset(viewsets.ModelViewSet):
             self.queryset = Shareholders.objects.filter(user=self.request.user)
         return super().get_permissions()
     
+    def create(self, request, *args, **kwargs):
+        try:
+            number_of_shares = int(request.data.get('number_of_shares', 0))
+            if number_of_shares < 0:
+                raise ValidationError({"error": "تعداد سهام نمی‌تواند منفی باشد"})
+        except (ValueError, TypeError):
+            raise ValidationError({"error": "تعداد سهام باید یک عدد صحیح باشد"})
+        
+        serializer = self.get_serializer(data=request.data)
+        serializer.is_valid(raise_exception=True)
+        self.perform_create(serializer)
+        headers = self.get_success_headers(serializer.data)
+        return Response(serializer.data, status=status.HTTP_201_CREATED, headers=headers)
+
+    def partial_update(self, request, *args, **kwargs):
+        if request.data.get('number_of_shares', 0) < 0:
+            raise ValidationError({"error": "تعداد سهام نمی‌تواند منفی باشد"})
+        return super().partial_update(request, *args, **kwargs)
 
 class StockTransferViewset(viewsets.ModelViewSet):
     queryset = StockTransfer.objects.all()
@@ -190,7 +208,6 @@ class StockTransferViewset(viewsets.ModelViewSet):
             )
 
 
-
 class PrecedenceViewset(viewsets.ModelViewSet):
     queryset = Precedence.objects.all()
     serializer_class = PrecedenceSerializer
@@ -269,8 +286,6 @@ class CapitalIncreasePaymentViewset(viewsets.ModelViewSet):
             "message": f"پرداخت حق تقدم {instance_str} با موفقیت حذف شد",
             "status": "success"
         }, status=status.HTTP_200_OK)
-
-
 
 
 class DisplacementPrecedenceViewset(viewsets.ModelViewSet):
@@ -516,3 +531,4 @@ class UnusedPrecedenceProcessViewset(viewsets.ModelViewSet):
             return super().get_queryset()
         else:
             return super().get_queryset()
+

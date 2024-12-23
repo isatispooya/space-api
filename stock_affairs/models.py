@@ -15,7 +15,7 @@ class Shareholders(models.Model):
         on_delete=models.CASCADE,
         verbose_name="شرکت"
     )
-    number_of_shares = models.BigIntegerField(verbose_name="تعداد سهام")
+    number_of_shares = models.PositiveBigIntegerField(verbose_name="تعداد سهام")
     created_at = models.DateTimeField(
         default=timezone.now,
         verbose_name="تاریخ ایجاد"
@@ -249,7 +249,6 @@ class UnusedPrecedenceProcess(models.Model):
     def __str__(self):
         return f"{self.company}"
 
-    
     
 class UnusedPrecedencePurchase(models.Model):
     user = models.ForeignKey(
