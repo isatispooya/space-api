@@ -12,7 +12,7 @@ from django.db import transaction
 from django.utils import timezone
 from django.db import models
 from rest_framework.exceptions import ValidationError
-
+from django.db.models import Sum
 
 
 class ShareholdersViewset(viewsets.ModelViewSet):
@@ -51,6 +51,7 @@ class ShareholdersViewset(viewsets.ModelViewSet):
         if request.data.get('number_of_shares', 0) < 0:
             raise ValidationError({"error": "تعداد سهام نمی‌تواند منفی باشد"})
         return super().partial_update(request, *args, **kwargs)
+
 
 class StockTransferViewset(viewsets.ModelViewSet):
     queryset = StockTransfer.objects.all()
@@ -223,6 +224,42 @@ class PrecedenceViewset(viewsets.ModelViewSet):
         if self.action in ['create', 'update', 'partial_update', 'destroy']:
             self.permission_classes = [IsAdminUser]
         return super().get_permissions()
+
+    def list(self, request, *args, **kwargs):
+        if not request.user.is_staff:
+            queryset = self.get_queryset().filter(user=request.user)
+            
+            precedence_totals = (
+                CapitalIncreasePayment.objects
+                .filter(precedence__user=request.user)
+                .annotate(total_precedence=Sum('amount'))
+            )
+            
+            totals_dict = {item['precedence__company']: item['total_precedence'] for item in precedence_totals}
+            
+            serializer = self.get_serializer(queryset, many=True)
+            data = serializer.data
+            
+            for item in data:
+                item['total_precedence'] = totals_dict.get(item['company'], 0)
+            
+            return Response(data)
+        else:
+            queryset = self.get_queryset()
+            serializer = self.get_serializer(queryset, many=True)
+            data = serializer.data
+            
+            precedence_totals = (
+                CapitalIncreasePayment.objects
+                .values('precedence__company')
+                .annotate(total_precedence=Sum('amount'))
+            )
+            totals_dict = {item['precedence__company']: item['total_precedence'] for item in precedence_totals}
+            
+            for item in data:
+                item['total_precedence'] = totals_dict.get(item['company'], 0)
+                
+            return Response(data)
 
 
 class CapitalIncreasePaymentViewset(viewsets.ModelViewSet):
