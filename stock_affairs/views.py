@@ -35,12 +35,6 @@ class ShareholdersViewset(viewsets.ModelViewSet):
         except (ValueError, TypeError):
             raise ValidationError({"error": "تعداد سهام باید یک عدد صحیح باشد"})
         
-        # بررسی وجود سهامدار در شرکت
-        user = request.data.get('user')
-        company = request.data.get('company')
-        if Shareholders.objects.filter(user=user, company=company).exists():
-            raise ValidationError({"error": "این کاربر قبلاً در این شرکت به عنوان سهامدار ثبت شده است"})
-        
         serializer = self.get_serializer(data=request.data)
         serializer.is_valid(raise_exception=True)
         self.perform_create(serializer)
@@ -260,7 +254,7 @@ class PrecedenceViewset(viewsets.ModelViewSet):
                 item['total_precedence'] = totals_dict.get(item['company'], 0)
                 
             return Response(data)
-
+    
 
 class CapitalIncreasePaymentViewset(viewsets.ModelViewSet):
     queryset = CapitalIncreasePayment.objects.all()
@@ -326,7 +320,7 @@ class CapitalIncreasePaymentViewset(viewsets.ModelViewSet):
         self.perform_destroy(instance)
         
         return Response({
-            "message": f"پرداخت حق تقدم {instance_str} با موفقیت حذف شد",
+            "message": f"پ��داخت حق تقدم {instance_str} با موفقیت حذف شد",
             "status": "success"
         }, status=status.HTTP_200_OK)
 
@@ -369,7 +363,6 @@ class DisplacementPrecedenceViewset(viewsets.ModelViewSet):
                 user=serializer.validated_data['buyer'],
                 company=serializer.validated_data['company'],
                 precedence=serializer.validated_data['number_of_shares'],
-                used_precedence=0  # مقدار اولیه برای حق تقدم استفاده شده
             )
 
         headers = self.get_success_headers(serializer.data)
@@ -393,15 +386,18 @@ class DisplacementPrecedenceViewset(viewsets.ModelViewSet):
                 difference = new_number_of_shares - old_number_of_shares
                 
                 if difference != 0:
-                    seller_precedence = Precedence.objects.select_for_update().get(
+                    seller_precedence = Precedence.objects.select_for_update().filter(
                         user=instance.seller,
                         company=instance.company
-                    )
+                    ).first()
                     
-                    buyer_precedence = Precedence.objects.select_for_update().get(
+                    buyer_precedence = Precedence.objects.select_for_update().filter(
                         user=instance.buyer,
                         company=instance.company
-                    )
+                    ).first()
+                    
+                    if not seller_precedence or not buyer_precedence:
+                        raise Precedence.DoesNotExist
                     
                     if difference > 0:  # افزایش تعداد حق تقدم
                         if seller_precedence.precedence < difference:

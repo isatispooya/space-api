@@ -2,6 +2,8 @@ from django.db import models
 from companies.models import Company
 from django.utils import timezone
 from user.models import User
+from django.core.exceptions import ValidationError
+from rest_framework.exceptions import ValidationError
 
 
 class Shareholders(models.Model):
@@ -37,6 +39,16 @@ class Shareholders(models.Model):
 
     def __str__(self):
         return f"{self.user.username} - {self.company}"
+    
+    def save(self, *args, **kwargs):
+        self.full_clean()
+        super().save(*args, **kwargs)
+
+    def clean(self):
+        if Shareholders.objects.filter(user=self.user, company=self.company).exists():
+            raise ValidationError({
+                "error": "این کاربر قبلاً در این شرکت به عنوان سهامدار ثبت شده است"
+            })
 
 
 class StockTransfer(models.Model):
@@ -84,6 +96,16 @@ class StockTransfer(models.Model):
     def __str__(self):
         return f"{self.seller} - {self.buyer} - {self.company}"
 
+    def save(self, *args, **kwargs):
+        self.full_clean()
+        super().save(*args, **kwargs)
+
+    def clean(self):
+        if self.seller == self.buyer:
+            raise ValidationError({
+                "error": "فروشنده و خریدار نمی‌توانند یک شخص باشند"
+            })
+
 
 class Precedence(models.Model):
     user = models.ForeignKey(
@@ -116,6 +138,16 @@ class Precedence(models.Model):
 
     def __str__(self):
         return f"{self.user} - {self.company}"
+    def save(self, *args, **kwargs):
+        self.full_clean()
+        super().save(*args, **kwargs)
+
+    def clean(self):
+        if Precedence.objects.filter(user=self.user, company=self.company).exists():
+            raise ValidationError({
+                "error": "شما قبلا حق تقدم در این شرکت ثبت کرده اید"
+            })
+    
 
 
 class CapitalIncreasePayment(models.Model):
@@ -196,6 +228,16 @@ class DisplacementPrecedence(models.Model):
 
     def __str__(self):
         return f"{self.seller} - {self.buyer} - {self.company}"
+
+    def save(self, *args, **kwargs):
+        self.full_clean()
+        super().save(*args, **kwargs)
+
+    def clean(self):
+        if self.seller == self.buyer:
+            raise ValidationError({
+                "error": "فروشنده و خریدار نمی‌توانند یک شخص باشند"
+            })
 
 
 class UnusedPrecedenceProcess(models.Model):
