@@ -25,6 +25,15 @@ class CorrespondenceSerializer(serializers.ModelSerializer):
         model = Correspondence
         fields = '__all__'
 
+    def to_representation(self, instance):
+        ret = super().to_representation(instance)
+        if 'attache_details' in ret and ret['attache_details']:
+            if hasattr(instance, 'attache') and instance.attache and instance.attache.file:
+                ret['attache_details']['file'] = instance.attache.file.url
+            else:
+                ret['attache_details']['file'] = None
+        return ret
+
     def create(self, validated_data):
         attache_file = validated_data.pop('attache_file', None)
         attache_name = validated_data.pop('attache_name', None)
