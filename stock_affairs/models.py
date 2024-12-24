@@ -4,6 +4,7 @@ from django.utils import timezone
 from user.models import User
 from django.core.exceptions import ValidationError
 from rest_framework.exceptions import ValidationError
+from payment_gateway.models import PaymentGateway
 
 
 class Shareholders(models.Model):
@@ -264,6 +265,13 @@ class UnusedPrecedenceProcess(models.Model):
         default=True , 
         verbose_name="موافقت نامه"
     )
+    payment_gateway = models.ForeignKey(
+        PaymentGateway , 
+        on_delete=models.CASCADE , 
+        null=True , 
+        blank=True , 
+        verbose_name="درگاه پرداخت"
+    )
     is_active = models.BooleanField(
         default=True , 
         verbose_name="فعال"
@@ -328,11 +336,29 @@ class UnusedPrecedencePurchase(models.Model):
         blank=True, 
         verbose_name="تصویر فیش"
     )
-    track_id = models.CharField(
+    invoice_unique_id = models.CharField(
         max_length=255 , 
         null=True , 
         blank=True,
-        verbose_name="شناسه تراکنش"
+        verbose_name="شماره فاکتور"
+    )
+    error_code = models.CharField(
+        max_length=255 , 
+        null=True , 
+        blank=True,
+        verbose_name="کد خطا"
+    )
+    error = models.TextField(
+        null=True , 
+        blank=True,
+        verbose_name="خطا"
+    )
+    payment_gateway = models.ForeignKey(
+        PaymentGateway , 
+        on_delete=models.CASCADE , 
+        null=True , 
+        blank=True , 
+        verbose_name="درگاه پرداخت"
     )
     transaction_url = models.CharField(
         max_length=500 , 
@@ -363,6 +389,24 @@ class UnusedPrecedencePurchase(models.Model):
         null=True , 
         blank=True,
         verbose_name="شماره کارت"
+    )
+    hashed_cart_number = models.CharField(
+        max_length=255 , 
+        null=True , 
+        blank=True,
+        verbose_name="شماره کارت به فرمت هش شده"
+    )
+    referal_number = models.CharField(
+        max_length=255 , 
+        null=True , 
+        blank=True,
+        verbose_name="شماره مرجع"
+    )
+    track_id = models.CharField(
+        max_length=255 , 
+        null=True , 
+        blank=True,
+        verbose_name="شناسه تراکنش"
     )
     status = models.CharField(
         max_length=255 , 

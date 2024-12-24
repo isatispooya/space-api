@@ -7,48 +7,6 @@ admin.site.register(StockTransfer)
 admin.site.register(DisplacementPrecedence)
 admin.site.register(CapitalIncreasePayment)
 admin.site.register(Precedence)
-@admin.register(UnusedPrecedencePurchase)
-class UnusedPrecedencePurchaseAdmin(admin.ModelAdmin):
-    list_display = ['user'  , 'created_at' , 'status' , 'requested_amount' , 'price' , 'track_id' , 'code_payment' , 'refrence_number' , 'cart_number' , 'code_state_payment' , 'description' , 'document' , 'transaction_url' ]
-    list_filter = ['created_at' , 'user'  , 'status']
-    search_fields = ['user'  , 'status']
-    list_per_page = 100
-    ordering = ['-created_at']
-    list_editable = ['status']
-    list_display_links = ['user' , 'track_id' , 'code_payment' , 'refrence_number' , 'cart_number' , 'code_state_payment' , 'description' , 'document' , 'transaction_url' ]
-    list_select_related = ['user' ]
-    fieldsets = [
-        ('اطلاعات اصلی', {
-            'fields': ['user'  , 'status']
-        }),
-        ('تاریخ‌ها', {
-            'fields': ['created_at' , 'updated_at']
-        }) , 
-        ('مبالغ', {
-            'fields': ['amount' , 'price' , 'requested_amount']
-        }), 
-        ('شناسه تراکنش', {
-            'fields': ['track_id' , 'code_payment' , 'refrence_number' , 'cart_number' , 'code_state_payment' , 'description' , 'transaction_url']
-        }) , 
-        ('فیش خرید', {
-            'fields': ['document']
-        })
-    ]
+admin.site.register(UnusedPrecedencePurchase)
+admin.site.register(UnusedPrecedenceProcess)
 
-@admin.register(UnusedPrecedenceProcess)
-class UnusedPrecedenceProcessAdmin(admin.ModelAdmin):
-    list_display = ['company' , 'total_amount' , 'used_amount' , 'price' , 'end_date' , 'is_active']
-    list_filter = ['company' , 'end_date' , 'created_at']
-    search_fields = ['company']
-    list_per_page = 100
-    ordering = ['-end_date']
-    list_display_links = ['company']
-    list_select_related = ['company']
-    fieldsets = [
-        ('اطلاعات اصلی', {
-            'fields': ['company' , 'total_amount' , 'used_amount' , 'price' , 'is_active']
-        }),
-        ('تاریخ‌ها', {
-            'fields': ['end_date']
-        })
-    ]
