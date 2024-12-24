@@ -4,14 +4,15 @@ from typing import Dict, Optional
 class SEPOnlinePayment:
     BASE_URL = "https://sep.shaparak.ir"
 
-    def __init__(self, terminal_id="21606922", redirect_url="https://ipmill.isatispooya.com/csr"):
+    def __init__(self, payment_gateway):
         """
         Initialize the payment gateway client.
-        :param terminal_id: Terminal ID assigned to the merchant.
-        :param redirect_url: The URL to redirect users after payment.
+        :param payment_gateway: PaymentGateway model instance
         """
-        self.terminal_id = terminal_id
-        self.redirect_url = redirect_url
+        self.terminal_id = payment_gateway.terminal_number
+        self.redirect_url = payment_gateway.redirect_url
+        if payment_gateway.base_url:
+            self.BASE_URL = payment_gateway.base_url
 
     def request_token(self, amount: int, res_num: str, cell_number: Optional[str] = None, 
                       token_expiry: int = 20) -> Dict:
