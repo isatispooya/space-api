@@ -13,6 +13,9 @@ from django.utils import timezone
 from django.db import models
 from rest_framework.exceptions import ValidationError
 from django.db.models import Sum
+from rest_framework.views import APIView
+import uuid
+from payment_gateway.sep import SEPOnlinePayment
 
 
 class ShareholdersViewset(viewsets.ModelViewSet):
@@ -559,7 +562,51 @@ class UnusedPrecedencePurchaseViewset(viewsets.ModelViewSet):
 
         return super().update(request, *args, **kwargs)
     
-    
+
+#  خرید حق تقدم استفاده نشده ایجاد کنید
+class CreateUnusedPurchase(APIView) : 
+    permission_classes = [IsAuthenticated , IsUnusedPrecedenceProcess]
+    def post (self , request): 
+        process = request.data.get('process')
+        amount = request.data.get('amount')
+        type = request.data.get('type')
+        if  not process and  not amount and not type:
+            raise ValidationError({"error": "فیلد های الزامی است"})
+        process = UnusedPrecedenceProcess.objects.filter(id=process).first()
+        if not process:
+            raise ValidationError({"error": "فرایند یافت نشد"})
+        value = int(amount) * int(process.price)
+        if type == '2':
+            payment_getway = process.payment_gateway
+            sep = SEPOnlinePayment(payment_getway)
+            purchase = UnusedPrecedencePurchase.objects.create(
+                user = request.user,
+                process = process,
+                requested_amount = amount,
+                price = value,
+                status = 'pending', 
+                payment_gateway = payment_getway,
+                invoice_unique_id = str(uuid.uuid4()),
+                type = type,
+                
+            )
+            token_response = sep.request_token(value ,purchase.invoice_unique_id , request.user.mobile)
+            if token_response['status'] == -1:
+                raise ValidationError({"error": "خطایی رخ داده است"})
+            payment_url = sep.redirect_to_payment(token_response['token'])
+            purchase.transaction_url = payment_url
+            purchase.save()
+
+
+            return Response({'redirect_url' : payment_url}, status=status.HTTP_200_OK)
+        
+        elif type == '1':
+            return Response({"message": "خرید با موفقیت ایجاد شد"}, status=status.HTTP_200_OK)
+        else:
+            raise ValidationError({"error": "نوع پرداخت معتبر نیست"})
+            
+
+
 class UnusedPrecedenceProcessViewset(viewsets.ModelViewSet):
     queryset = UnusedPrecedenceProcess.objects.all()
     serializer_class = UnusedPrecedenceProcessSerializer
@@ -569,5 +616,9 @@ class UnusedPrecedenceProcessViewset(viewsets.ModelViewSet):
         if self.request.user.is_staff:
             return super().get_queryset()
         else:
-            return super().get_queryset()
+            return super().get_queryset().filter(is_active=True)
+
+
+    
+
 
