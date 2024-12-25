@@ -4,13 +4,17 @@ from typing import Dict, Optional
 class SEPOnlinePayment:
     BASE_URL = "https://sep.shaparak.ir"
 
-    def __init__(self, payment_gateway):
+    def __init__(self, payment_gateway , invoice_unique_id = None):
         """
         Initialize the payment gateway client.
         :param payment_gateway: PaymentGateway model instance
         """
         self.terminal_id = payment_gateway.terminal_number
-        self.redirect_url = payment_gateway.redirect_url
+        self.invoice_unique_id = invoice_unique_id
+        if self.invoice_unique_id:
+            self.redirect_url = payment_gateway.redirect_url + '/' + self.invoice_unique_id
+        else:
+            self.redirect_url = payment_gateway.redirect_url
         if payment_gateway.base_url:
             self.BASE_URL = payment_gateway.base_url
 

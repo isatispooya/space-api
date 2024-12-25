@@ -562,7 +562,7 @@ class CreateUnusedPurchase(APIView):
         if payment_type == '2':  # پرداخت آنلاین
             try:
                 payment_gateway = process.payment_gateway
-                sep = SEPOnlinePayment(payment_gateway)
+                sep = SEPOnlinePayment(payment_gateway , invoice_unique_id=purchase.invoice_unique_id)
                 token_response = sep.request_token(
                     value,
                     purchase.invoice_unique_id,
