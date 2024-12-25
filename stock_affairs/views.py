@@ -16,7 +16,8 @@ from django.db.models import Sum
 from rest_framework.views import APIView
 import uuid
 from payment_gateway.sep import SEPOnlinePayment
-
+from rest_framework.response import Response
+from rest_framework.generics import get_object_or_404
 
 class ShareholdersViewset(viewsets.ModelViewSet):
     queryset = Shareholders.objects.all()
@@ -323,7 +324,7 @@ class CapitalIncreasePaymentViewset(viewsets.ModelViewSet):
         self.perform_destroy(instance)
         
         return Response({
-            "message": f"پ��داخت حق تقدم {instance_str} با موفقیت حذف شد",
+            "message": f"پرداخت حق تقدم {instance_str} با موفقیت حذف شد",
             "status": "success"
         }, status=status.HTTP_200_OK)
 
@@ -487,124 +488,130 @@ class DisplacementPrecedenceViewset(viewsets.ModelViewSet):
                 status=status.HTTP_403_FORBIDDEN
             )
 
-# خرید از فرایند
-class UnusedPrecedencePurchaseViewset(viewsets.ModelViewSet):
-    queryset = UnusedPrecedencePurchase.objects.all()
-    serializer_class = UnusedPrecedencePurchaseSerializer
-    permission_classes = [IsAuthenticated , IsUnusedPrecedencePurchase]
-
-    def get_permissions(self):
-        if self.action in ['create' , 'list' , 'retrieve']:
-            self.permission_classes = [IsAdminUser | IsAuthenticated]
-        elif self.action in ['update' , 'partial_update' , 'destroy']:
-            self.permission_classes = [IsAdminUser]
-        return super().get_permissions()
-    
-    def create(self, request):
-        process_id = request.data.get('process')
-        requested_amount = request.data.get('amount')
-        process = UnusedPrecedenceProcess.objects.get(id=process_id)
-        # بررسی موجودی
-        if int(requested_amount) > int(process.used_amount):
-            raise ValidationError({"error": "مقدار درخواستی بیشتر از موجودی است"})
-        # محاسبه قیمت
-        calculated_price = int(requested_amount) * int(process.price)
-        # بررسی نوع فرایند
-
-        document = None
-        transaction_id = None
-        transaction_url = None
-
-        if request.data.get('type') == '1':
-            # فیش
-            document = request.FILES.get('document')
-            if not document:
-                raise ValidationError({"error": "فیش الزامی است"})
-        elif request.data.get('type') == '2':
-            # درگاه پرداخت
-            transaction_id = '1234567890'
-            transaction_url = 'https://example.com/transaction/1234567890'
-        # ساخت دیتای اولیه
-        data = {
-            'user': request.user.id,
-            'process': process.id,
-            'requested_amount': requested_amount,
-            'amount': process.used_amount,
-            'price': calculated_price,
-            'status': 'pending', 
-            'document': document,
-            'transaction_id': transaction_id,
-            'transaction_url': transaction_url,
-            'type': request.data.get('type')
-        }
-        serializer = self.get_serializer(data=data)
-        serializer.is_valid(raise_exception=True)
-        self.perform_create(serializer)
-        
-        headers = self.get_success_headers(serializer.data)
-        return Response(serializer.data, status=status.HTTP_201_CREATED, headers=headers)
-    
-    def get_queryset(self):
-        if self.request.user.is_staff:
-            return super().get_queryset()
-        else:
-            return super().get_queryset().filter(user=self.request.user)
-        
-    
-    def update(self, request, *args, **kwargs):
-        status = request.data.get('status')
-        if status == 'approved':
-            process = UnusedPrecedenceProcess.objects.get(id=request.data.get('process'))
-            requested_amount = request.data.get('requested_amount')
-            used_amount = int(process.used_amount) - int(requested_amount)
-            process.used_amount = used_amount
-            process.save()
-
-        return super().update(request, *args, **kwargs)
-    
 
 #  خرید حق تقدم استفاده نشده ایجاد کنید
-class CreateUnusedPurchase(APIView) : 
-    permission_classes = [IsAuthenticated , IsUnusedPrecedenceProcess]
-    def post (self , request): 
-        process = request.data.get('process')
-        amount = request.data.get('amount')
-        type = request.data.get('type')
-        if  not process and  not amount and not type:
-            raise ValidationError({"error": "فیلد های الزامی است"})
-        process = UnusedPrecedenceProcess.objects.filter(id=process).first()
-        if not process:
-            raise ValidationError({"error": "فرایند یافت نشد"})
-        value = int(amount) * int(process.price)
-        if type == '2':
-            payment_getway = process.payment_gateway
-            sep = SEPOnlinePayment(payment_getway)
-            purchase = UnusedPrecedencePurchase.objects.create(
-                user = request.user,
-                process = process,
-                requested_amount = amount,
-                price = value,
-                status = 'pending', 
-                payment_gateway = payment_getway,
-                invoice_unique_id = str(uuid.uuid4()),
-                type = type,
-                
-            )
-            token_response = sep.request_token(value ,purchase.invoice_unique_id , request.user.mobile)
-            if token_response['status'] == -1:
-                raise ValidationError({"error": "خطایی رخ داده است"})
-            payment_url = sep.redirect_to_payment(token_response['token'])
-            purchase.transaction_url = payment_url
-            purchase.save()
-
-
-            return Response({'redirect_url' : payment_url}, status=status.HTTP_200_OK)
+class CreateUnusedPurchase(APIView):
+    permission_classes = [IsAuthenticated, IsUnusedPrecedenceProcess]
+    http_method_names = ['get', 'post', 'patch']
+    
+    def get_permissions(self):
+        return [permission() for permission in self.permission_classes]
+    
+    def get(self, request, pk=None):
+        if pk:
+            if request.user.is_staff:
+                purchase = get_object_or_404(UnusedPrecedencePurchase, id=pk)
+            else:
+                purchase = get_object_or_404(UnusedPrecedencePurchase, id=pk, user=request.user)
+            serializer = UnusedPrecedencePurchaseSerializer(purchase)
+            return Response(serializer.data)
         
-        elif type == '1':
-            return Response({"message": "خرید با موفقیت ایجاد شد"}, status=status.HTTP_200_OK)
+        if request.user.is_staff:
+            purchases = UnusedPrecedencePurchase.objects.all()
         else:
-            raise ValidationError({"error": "نوع پرداخت معتبر نیست"})
+            purchases = UnusedPrecedencePurchase.objects.filter(user=request.user)
+        
+        process = request.query_params.get('process')
+        status = request.query_params.get('status')
+        
+        if process:
+            purchases = purchases.filter(process_id=process)
+        if status:
+            purchases = purchases.filter(status=status)
             
+        purchases = purchases.order_by('-created_at')
+        
+        serializer = UnusedPrecedencePurchaseSerializer(purchases, many=True)
+        return Response(serializer.data)
+
+    def post(self, request):
+        process_id = request.data.get('process')
+        amount = request.data.get('amount')
+        payment_type = request.data.get('type')
+        
+        # بررسی وجود همه فیلدهای ضروری
+        if not all([process_id, amount, payment_type]):
+            raise ValidationError({"error": "تمامی فیلدهای process، amount و type الزامی هستند"})
+
+        # بررسی و دریافت فرآیند
+        process = UnusedPrecedenceProcess.objects.filter(id=process_id, is_active=True).first()
+        if not process:
+            raise ValidationError({"error": "فرآیند فعال یافت نشد"})
+
+        try:
+            amount = int(amount)
+            value = amount * process.price
+        except (ValueError, TypeError):
+            raise ValidationError({"error": "مقدار amount باید عددی صحیح باشد"})
+
+        # بررسی موجودی
+        if amount > process.used_amount:
+            raise ValidationError({"error": "مقدار درخواستی بیشتر از موجودی است"})
+
+        # ایجاد خرید
+        purchase = UnusedPrecedencePurchase.objects.create(
+            user=request.user,
+            process=process,
+            requested_amount=amount,
+            price=value,
+            status='pending',
+            type=payment_type,
+            invoice_unique_id=str(uuid.uuid4())
+        )
+
+        if payment_type == '2':  # پرداخت آنلاین
+            try:
+                payment_gateway = process.payment_gateway
+                sep = SEPOnlinePayment(payment_gateway)
+                token_response = sep.request_token(
+                    value,
+                    purchase.invoice_unique_id,
+                    request.user.mobile
+                )
+
+                if token_response['status'] == -1:
+                    purchase.delete()  # حذف خرید در صورت خطا
+                    raise ValidationError({"error": "خطا در ایجاد تراکنش"})
+
+                payment_url = sep.redirect_to_payment(token_response['token'])
+                purchase.transaction_url = payment_url
+                purchase.payment_gateway = payment_gateway
+                purchase.save()
+
+                return Response({'redirect_url': payment_url}, status=status.HTTP_200_OK)
+
+            except Exception as e:
+                raise ValidationError({"error": f"خطا در پردازش پرداخت: {str(e)}"})
+
+        elif payment_type == '1':  # پرداخت با فیش
+            if not request.FILES.get('document'):
+                raise ValidationError({"error": "آپلود فیش پرداخت الزامی است"})
+            
+            purchase.document = request.FILES['document']
+            purchase.save()
+            return Response({"message": "خرید با موفقیت ثبت شد"}, status=status.HTTP_201_CREATED)
+        
+        else:
+            raise ValidationError({"error": "نوع پرداخت نامعتبر است"})
+
+    def patch(self, request, pk=None):
+        if not request.user.is_staff:
+            return Response(
+                {"error": "شما دسترسی لازم را ندارید"},
+                status=status.HTTP_403_FORBIDDEN
+            )
+
+        new_status = request.data.get('status')
+        if not new_status:
+            raise ValidationError({"error": "وضعیت جدید الزامی است"})
+
+        purchase = get_object_or_404(UnusedPrecedencePurchase, id=pk)
+        purchase.status = new_status
+        purchase.updated_at = timezone.now()
+        purchase.save()
+        serializer = UnusedPrecedencePurchaseSerializer(purchase)
+
+        return Response({"message" : "وضعیت خرید با موفقیت به‌روزرسانی شد","data" : serializer.data },  status=status.HTTP_200_OK)
 
 
 class UnusedPrecedenceProcessViewset(viewsets.ModelViewSet):

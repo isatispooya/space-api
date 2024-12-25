@@ -32,6 +32,8 @@ class PrecedenceSerializer(serializers.ModelSerializer):
         fields = '__all__'
 
 class CapitalIncreasePaymentSerializer(serializers.ModelSerializer):
+    precedence = PrecedenceSerializer(read_only=True)
+    
     class Meta:
         model = CapitalIncreasePayment
         fields = '__all__'
