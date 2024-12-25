@@ -366,6 +366,10 @@ class UnusedPrecedencePurchase(models.Model):
         blank=True,
         verbose_name="آدرس تراکنش"
     )
+    verify_transaction = models.BooleanField(
+        default=False,
+        verbose_name="تراکنش بررسی شده"
+    )
     code_payment = models.CharField(
         max_length=255 , 
         null=True , 
@@ -385,7 +389,7 @@ class UnusedPrecedencePurchase(models.Model):
         verbose_name="کد وضعیت پرداخت"
     )
     cart_number = models.CharField(
-        max_length=255 , 
+        max_length=255 ,  
         null=True , 
         blank=True,
         verbose_name="شماره کارت"

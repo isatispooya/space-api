@@ -492,7 +492,7 @@ class DisplacementPrecedenceViewset(viewsets.ModelViewSet):
 #  خرید حق تقدم استفاده نشده ایجاد کنید
 class CreateUnusedPurchase(APIView):
     permission_classes = [IsAuthenticated, IsUnusedPrecedenceProcess]
-    http_method_names = ['get', 'post', 'patch']
+    http_method_names = ['get', 'post', 'patch', 'put']
     
     def get_permissions(self):
         return [permission() for permission in self.permission_classes]
@@ -613,6 +613,51 @@ class CreateUnusedPurchase(APIView):
 
         return Response({"message" : "وضعیت خرید با موفقیت به‌روزرسانی شد","data" : serializer.data },  status=status.HTTP_200_OK)
 
+    def put(self, request):
+        invoice_unique_id = request.data.get('uuid')
+        if not invoice_unique_id:
+            raise ValidationError({"error": "شناسه فاکتور الزامی است"})
+        
+        purchase = get_object_or_404(UnusedPrecedencePurchase, invoice_unique_id=invoice_unique_id)
+        if not purchase:
+            raise ValidationError({"error": "خرید یافت نشد"})
+        
+        if purchase.verify_transaction:
+            return Response({"error": "تراکنش قبلا بررسی شده است"}, status=status.HTTP_400_BAD_REQUEST)
+        
+        
+        # ایجاد نمونه از SEPOnlinePayment
+        sep = SEPOnlinePayment(purchase.payment_gateway, invoice_unique_id=invoice_unique_id)
+        verification_result = sep.verify_transaction(str(invoice_unique_id))
+        print(verification_result)
+        # purchase.verify_transaction = True
+        # purchase.save()
+        if verification_result.get('Success') == True:
+            data = verification_result.get('TransactionDetail', {})
+            
+            print(data)  # برای دیدن داده‌های دریافتی در لاگ
+            purchase.status = 'approved'
+            purchase.cart_number = data.get('MaskedPan')
+            purchase.hashed_cart_number = data.get('HashedPan')
+            purchase.refrence_number = data.get('RRN')
+            purchase.track_id = data.get('TraceNo')
+            purchase.updated_at = timezone.now()
+            purchase.save()
+            
+            return Response({
+                "message": "پرداخت با موفقیت تایید شد",
+                "data": data
+            }, status=status.HTTP_200_OK)
+        else:
+            purchase.status = 'rejected'
+            purchase.updated_at = timezone.now()
+            purchase.error_code = verification_result.get('ResultCode')
+            purchase.error = verification_result.get('ResultDescription')
+            purchase.save()
+            
+            return Response({
+                "error": purchase.error,
+            }, status=status.HTTP_400_BAD_REQUEST)
 
 class UnusedPrecedenceProcessViewset(viewsets.ModelViewSet):
     queryset = UnusedPrecedenceProcess.objects.all()
