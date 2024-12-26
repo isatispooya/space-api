@@ -25,8 +25,8 @@ class Payment(models.Model):
         max_length=255 , 
         verbose_name="آدرس تراکنش"
     )
-    verify_transaction = models.CharField(
-        max_length=255 , 
+    verify_transaction = models.BooleanField(
+        default=False , 
         verbose_name="تراکنش بررسی شده"
     )
     code_payment = models.CharField(

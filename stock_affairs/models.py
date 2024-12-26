@@ -348,6 +348,13 @@ class UnusedPrecedencePurchase(models.Model):
         blank=True , 
         verbose_name="توضیحات"
     )
+    status = models.CharField(
+        max_length=255 , 
+        null=True , 
+        blank=True , 
+        choices=[('pending' , 'pending') , ('approved' , 'approved') , ('rejected' , 'rejected')],
+        verbose_name="وضعیت"
+    )
     created_at = models.DateTimeField(
         default=timezone.now,
         verbose_name="تاریخ ایجاد"

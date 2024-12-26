@@ -12,7 +12,7 @@ class SEPOnlinePayment:
         self.terminal_id = payment_gateway.terminal_number
         self.invoice_unique_id = invoice_unique_id
         if self.invoice_unique_id:
-            self.redirect_url = payment_gateway.redirect_url + '/' + self.invoice_unique_id
+            self.redirect_url = payment_gateway.redirect_url + '/' + self.invoice_unique_id + '/'
         else:
             self.redirect_url = payment_gateway.redirect_url
         if payment_gateway.base_url:
