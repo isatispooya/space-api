@@ -18,6 +18,7 @@ import uuid
 from payment_gateway.sep import SEPOnlinePayment
 from rest_framework.response import Response
 from rest_framework.generics import get_object_or_404
+from transactions.models import Payment
 
 class ShareholdersViewset(viewsets.ModelViewSet):
     queryset = Shareholders.objects.all()
@@ -548,24 +549,24 @@ class CreateUnusedPurchase(APIView):
         if amount > process.used_amount:
             raise ValidationError({"error": "مقدار درخواستی بیشتر از موجودی است"})
 
+        invoice_unique_id=str(uuid.uuid4())
         # ایجاد خرید
         purchase = UnusedPrecedencePurchase.objects.create(
             user=request.user,
             process=process,
             requested_amount=amount,
             price=value,
-            status='pending',
             type=payment_type,
-            invoice_unique_id=str(uuid.uuid4())
+            
         )
 
         if payment_type == '2':  # پرداخت آنلاین
             try:
                 payment_gateway = process.payment_gateway
-                sep = SEPOnlinePayment(payment_gateway , invoice_unique_id=purchase.invoice_unique_id)
+                sep = SEPOnlinePayment(payment_gateway , invoice_unique_id=invoice_unique_id)
                 token_response = sep.request_token(
                     value,
-                    purchase.invoice_unique_id,
+                    invoice_unique_id,
                     request.user.mobile
                 )
 
@@ -574,8 +575,14 @@ class CreateUnusedPurchase(APIView):
                     raise ValidationError({"error": "خطا در ایجاد تراکنش"})
 
                 payment_url = sep.redirect_to_payment(token_response['token'])
-                purchase.transaction_url = payment_url
-                purchase.payment_gateway = payment_gateway
+                transaction = Payment.objects.create(
+                    payment_gateway=payment_gateway,
+                    invoice_unique_id=invoice_unique_id,
+                    transaction_url=payment_url,
+                    status='pending'
+                )
+                transaction.save()
+                purchase.payment = transaction
                 purchase.save()
 
                 return Response({'redirect_url': payment_url}, status=status.HTTP_200_OK)

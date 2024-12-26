@@ -5,7 +5,7 @@ from user.models import User
 from django.core.exceptions import ValidationError
 from rest_framework.exceptions import ValidationError
 from payment_gateway.models import PaymentGateway
-
+from transactions.models import Payment
 
 class Shareholders(models.Model):
     user = models.ForeignKey(
@@ -336,88 +336,12 @@ class UnusedPrecedencePurchase(models.Model):
         blank=True, 
         verbose_name="تصویر فیش"
     )
-    invoice_unique_id = models.CharField(
-        max_length=255 , 
-        null=True , 
-        blank=True,
-        verbose_name="شماره فاکتور"
-    )
-    error_code = models.CharField(
-        max_length=255 , 
-        null=True , 
-        blank=True,
-        verbose_name="کد خطا"
-    )
-    error = models.TextField(
-        null=True , 
-        blank=True,
-        verbose_name="خطا"
-    )
-    payment_gateway = models.ForeignKey(
-        PaymentGateway , 
+    payment = models.ForeignKey(
+        Payment , 
         on_delete=models.CASCADE , 
         null=True , 
         blank=True , 
-        verbose_name="درگاه پرداخت"
-    )
-    transaction_url = models.CharField(
-        max_length=500 , 
-        null=True , 
-        blank=True,
-        verbose_name="آدرس تراکنش"
-    )
-    verify_transaction = models.BooleanField(
-        default=False,
-        verbose_name="تراکنش بررسی شده"
-    )
-    code_payment = models.CharField(
-        max_length=255 , 
-        null=True , 
-        blank=True,
-        verbose_name="کد پرداخت"
-    )
-    refrence_number = models.CharField(
-        max_length=255 , 
-        null=True , 
-        blank=True,
-        verbose_name="شماره پیگیری شاپرک"
-    )
-    code_state_payment = models.CharField(
-        max_length=255 , 
-        null=True , 
-        blank=True,
-        verbose_name="کد وضعیت پرداخت"
-    )
-    cart_number = models.CharField(
-        max_length=255 ,  
-        null=True , 
-        blank=True,
-        verbose_name="شماره کارت"
-    )
-    hashed_cart_number = models.CharField(
-        max_length=255 , 
-        null=True , 
-        blank=True,
-        verbose_name="شماره کارت به فرمت هش شده"
-    )
-    referal_number = models.CharField(
-        max_length=255 , 
-        null=True , 
-        blank=True,
-        verbose_name="شماره مرجع"
-    )
-    track_id = models.CharField(
-        max_length=255 , 
-        null=True , 
-        blank=True,
-        verbose_name="شناسه تراکنش"
-    )
-    status = models.CharField(
-        max_length=255 , 
-        null=True , 
-        blank=True , 
-        choices=[('pending' , 'درحال بررسی') , ('approved' , 'تایید شده') , ('rejected' , 'رد شده')] , 
-        verbose_name="وضعیت"
+        verbose_name="پرداخت"
     )
     description = models.TextField(
         null=True , 
