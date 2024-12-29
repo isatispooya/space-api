@@ -46,7 +46,7 @@ class OtpSejamViewset(APIView):
             "uniqueIdentifier": uniqueIdentifier
             })
             headers = {
-            'X-API-KEY': os.getenv('X-API-KEY'),
+            'X-API-KEY': "zH7n^K8s#D4qL!rV9tB@2xEoP1W%0uNc" ,#os.getenv('X-API-KEY','zH7n^K8s#D4qL!rV9tB@2xEoP1W%0uNc'),
             'Content-Type': 'application/json'
             }
             response = requests.request("POST", url, headers=headers, data=payload)
@@ -79,7 +79,7 @@ class RegisterViewset(APIView):
             "otp": otp
             })
             headers = {
-            'X-API-KEY': os.getenv('X-API-KEY'),
+            'X-API-KEY':'zH7n^K8s#D4qL!rV9tB@2xEoP1W%0uNc', #os.getenv('X-API-KEY'),
             'Content-Type': 'application/json'
             }
             response = requests.request("POST", url, headers=headers, data=payload)
