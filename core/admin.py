@@ -11,7 +11,7 @@ class AnnouncementAdmin(admin.ModelAdmin):
             'fields': ['title' , 'description' , 'picture' , 'link' , 'is_active']
         }),
         ('تاریخ‌ها', {
-            'fields': ['created_at' , 'updated_at']
+            'fields': ['updated_at']
         })
     ]
 
