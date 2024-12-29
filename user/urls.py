@@ -1,4 +1,4 @@
-from .views import OtpSejamViewset ,RegisterViewset , ChangePasswordViewset , ForgotPasswordViewset ,ProfileViewset , UserViewset , UserDetailViewset
+from .views import OtpSejamViewset ,RegisterViewset , ChangePasswordViewset ,SejamDataReceiverViewset,ForgotPasswordViewset ,ProfileViewset , UserViewset , UserDetailViewset
 from django.urls import path
 
 urlpatterns = [
@@ -9,4 +9,5 @@ urlpatterns = [
     path('user/profile/', ProfileViewset.as_view(), name='user-profile'),
     path('users/', UserViewset.as_view(), name='users'),
     path('users/<int:pk>/', UserDetailViewset.as_view(), name='user-detail-for-admin'),
+    path('sejam-data-receiver/', SejamDataReceiverViewset.as_view(), name='sejam-data-receiver'),
 ]
