@@ -67,23 +67,62 @@ jobs:
             echo 'Creating database backup...'
             pg_dump -U ${{ secrets.DB_USER }} ${{ secrets.DB_NAME }} > backup_$(date +%Y%m%d_%H%M%S).sql || echo 'Backup failed but continuing...'
             
-            # حذف مایگریشن‌های قدیمی
+            # حذف تمام مایگریشن‌های قبلی
             find . -path '*/migrations/*.py' -not -name '__init__.py' -delete
             find . -path '*/migrations/*.pyc' -delete
             
-            # ایجاد مایگریشن‌های جدید برای هر اپ
-            for app in core user companies positions correspondence stock_affairs timeflow payment_gateway transactions; do
-              echo "Making migrations for $app..."
-              python3 manage.py makemigrations $app --verbosity 3 || exit 1
-            done
+            # ایجاد مایگریشن‌ها به ترتیب مشخص شده
+            echo 'Creating migrations in specific order...'
             
-            # اجرای مایگریشن‌ها
-            echo 'Applying migrations...'
-            python3 manage.py migrate --verbosity 3 || exit 1
+            # 1. user
+            echo 'Making migrations for user...'
+            python3 manage.py makemigrations user --verbosity 3 || exit 1
+            python3 manage.py migrate user --verbosity 3 || exit 1
+            
+            # 2. companies
+            echo 'Making migrations for companies...'
+            python3 manage.py makemigrations companies --verbosity 3 || exit 1
+            python3 manage.py migrate companies --verbosity 3 || exit 1
+            
+            # 3. positions
+            echo 'Making migrations for positions...'
+            python3 manage.py makemigrations positions --verbosity 3 || exit 1
+            python3 manage.py migrate positions --verbosity 3 || exit 1
+            
+            # 4. payment_gateway
+            echo 'Making migrations for payment_gateway...'
+            python3 manage.py makemigrations payment_gateway --verbosity 3 || exit 1
+            python3 manage.py migrate payment_gateway --verbosity 3 || exit 1
+            
+            # 5. transactions
+            echo 'Making migrations for transactions...'
+            python3 manage.py makemigrations transactions --verbosity 3 || exit 1
+            python3 manage.py migrate transactions --verbosity 3 || exit 1
+            
+            # 6. stock_affairs
+            echo 'Making migrations for stock_affairs...'
+            python3 manage.py makemigrations stock_affairs --verbosity 3 || exit 1
+            python3 manage.py migrate stock_affairs --verbosity 3 || exit 1
+            
+            # 7. core
+            echo 'Making migrations for core...'
+            python3 manage.py makemigrations core --verbosity 3 || exit 1
+            python3 manage.py migrate core --verbosity 3 || exit 1
+            
+            # بقیه اپ‌ها
+            for app in correspondence timeflow; do
+              echo \"Making migrations for $app...\"
+              python3 manage.py makemigrations $app --verbosity 3 || exit 1
+              python3 manage.py migrate $app --verbosity 3 || exit 1
+            done
             
             # تأیید نهایی
             echo 'Final migration state:'
             python3 manage.py showmigrations
+            
+            # بررسی جداول
+            echo 'Verifying database tables...'
+            python3 manage.py shell -c "from django.db import connection; with connection.cursor() as cursor: cursor.execute(\"SELECT table_name FROM information_schema.tables WHERE table_schema = 'public'\"); tables = cursor.fetchall(); print('Available tables:'); [print(table[0]) for table in tables]"
           "
 
       - name: Setup Static Files
