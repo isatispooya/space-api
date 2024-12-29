@@ -270,6 +270,66 @@ class Appendices(models.Model):
         return f"{self.name}"
 
 
+class ProcessDescription(models.Model):
+    description = models.TextField(
+        null=True , 
+        blank=True , 
+        verbose_name="توضیحات"
+    )
+    picture = models.ImageField(
+        upload_to='stock_affairs/process_description/',
+        null=True , 
+        blank=True , 
+        verbose_name="تصویر"
+    )
+    title = models.CharField(
+        max_length=255,
+        null=True , 
+        blank=True , 
+        verbose_name="عنوان"
+    )
+    location = models.CharField(
+        max_length=255,
+        null=True , 
+        blank=True , 
+        verbose_name="مکان"
+    )
+    contact_number = models.CharField(
+        max_length=255,
+        null=True , 
+        blank=True , 
+        verbose_name="شماره تماس"
+    )
+    instagram_link = models.URLField(
+        null=True , 
+        blank=True , 
+        verbose_name="لینک آی‌دی اینستاگرام"
+    )
+    telegram_link = models.URLField(
+        null=True , 
+        blank=True , 
+        verbose_name="لینک تلگرام"
+    )
+    created_at = models.DateTimeField(
+        default=timezone.now,
+        verbose_name="تاریخ ایجاد"
+    )
+    updated_at = models.DateTimeField(
+        auto_now=True,
+        verbose_name="تاریخ به‌روزرسانی"
+    )
+    class Meta:
+        verbose_name = "توضیحات فرایند"
+        verbose_name_plural = "توضیحات فرایند"
+        ordering = ['-created_at']
+        indexes = [
+            models.Index(fields=['created_at']),
+        ]
+    
+    def __str__(self):
+        return f"{self.title}"
+
+
 class UnusedPrecedenceProcess(models.Model):
     company = models.ForeignKey(
         Company, 
@@ -285,10 +345,12 @@ class UnusedPrecedenceProcess(models.Model):
     price = models.BigIntegerField(
         verbose_name="قیمت"
     )
-    description = models.TextField(
+    process_description = models.ForeignKey(
+        ProcessDescription,
+        on_delete=models.CASCADE,
         null=True , 
         blank=True , 
-        verbose_name="توضیحات"
+        verbose_name="توضیحات فرایند"
     )
     agreement = models.BooleanField(
         default=True , 
@@ -312,6 +374,12 @@ class UnusedPrecedenceProcess(models.Model):
         null=True,
         blank=True,
         verbose_name="ضمیمه"
+    )
+    sheba_number = models.CharField(
+        max_length=255,
+        null=True , 
+        blank=True , 
+        verbose_name="شماره شبا"
     )
     end_date = models.DateTimeField(
         default=timezone.now,
