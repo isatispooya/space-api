@@ -62,23 +62,35 @@ jobs:
         run: |
           ssh -p $SERVER_PORT $SERVER_USER@$SERVER_HOST "
             cd $SERVER_DIR
+            
+            # پشتیبان‌گیری از دیتابیس (اختیاری اما توصیه می‌شود)
+            echo 'Creating database backup...'
+            pg_dump -U ${{ secrets.DB_USER }} ${{ secrets.DB_NAME }} > backup.sql || echo 'Backup failed but continuing...'
+            
             echo 'Removing old migrations...'
             find . -path '*/migrations/*.py' -not -name '__init__.py' -delete
             find . -path '*/migrations/*.pyc' -delete
             
+            # بررسی وضعیت دیتابیس قبل از مایگریشن
+            echo 'Current database state:'
+            python3 manage.py showmigrations
+            
+            # ایجاد مایگریشن‌های جدید با لاگ کامل
             echo 'Making new migrations...'
-            python3 manage.py makemigrations user --verbosity 2
-            python3 manage.py makemigrations --verbosity 2
+            python3 manage.py makemigrations --verbosity 3 || exit 1
             
-            echo 'Show migrations status...'
-            python3 manage.py showmigrations
-            
+            # اعمال مایگریشن‌ها با بررسی خطا
             echo 'Applying migrations...'
-            python3 manage.py migrate user --verbosity 2
-            python3 manage.py migrate --verbosity 2 --force
+            python3 manage.py migrate --verbosity 3 --plan  # نمایش برنامه مایگریشن
+            python3 manage.py migrate --verbosity 3 || exit 1
             
-            echo 'Final migrations status...'
-            python3 manage.py showmigrations
+            # تایید نهایی
+            echo 'Verifying final migration state...'
+            python3 manage.py showmigrations --list
+            
+            # بررسی سلامت دیتابیس
+            echo 'Checking database consistency...'
+            python3 manage.py check --database default || exit 1
           "
 
       - name: Setup Static Files
