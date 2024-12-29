@@ -12,10 +12,8 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 AUTH_USER_MODEL = 'user.User'
 
 
-SECRET_KEY = os.getenv('DJANGO_SECRET_KEY')
+SECRET_KEY = "JQ_081PCdOvbHfaKInG6996boObSBOobsmSNj-UoB-L_VvJEpIb_J_vsKfVTTAYHanDJOb"
 
-if not SECRET_KEY:
-    raise ImproperlyConfigured('DJANGO_SECRET_KEY must be set in environment variables')
 
 DEBUG = True#os.getenv('DEBUG', 'False') == 'True'
 
