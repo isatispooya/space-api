@@ -75,6 +75,23 @@ jobs:
             
             # ساخت و اجرای مایگریشن‌ها
             echo 'Making and applying migrations...'
+            python3 manage.py makemigrations user --verbosity 3
+            python3 manage.py migrate user --verbosity 3
+
+            python3 manage.py makemigrations companies --verbosity 3
+            python3 manage.py migrate companies --verbosity 3
+
+            python3 manage.py makemigrations positions --verbosity 3
+            python3 manage.py migrate positions --verbosity 3
+
+            python3 manage.py makemigrations payment_gateway --verbosity 3
+            python3 manage.py migrate payment_gateway --verbosity 3
+
+            python3 manage.py makemigrations transactions --verbosity 3
+            python3 manage.py migrate transactions --verbosity 3
+
+            python3 manage.py makemigrations stock_affairs --verbosity 3
+            python3 manage.py migrate stock_affairs --verbosity 3
             python3 manage.py makemigrations core --verbosity 3
             python3 manage.py migrate core --verbosity 3
             
