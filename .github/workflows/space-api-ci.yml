@@ -63,34 +63,23 @@ jobs:
           ssh -p $SERVER_PORT $SERVER_USER@$SERVER_HOST "
             cd $SERVER_DIR
             
-            # پشتیبان‌گیری از دیتابیس
-            echo 'Creating database backup...'
-            pg_dump -U \"${{ secrets.DB_USER }}\" \"${{ secrets.DB_NAME }}\" > backup_\$(date +%Y%m%d_%H%M%S).sql || echo 'Backup failed but continuing...'
+            # بررسی وضعیت PostgreSQL
+            echo 'Checking PostgreSQL status...'
+            systemctl is-active postgresql || systemctl start postgresql
             
-            # اجرای مایگریشن‌ها بدون حذف فایل‌های قبلی
-            echo 'Running migrations in specific order...'
+            # پشتیبان‌گیری از دیتابیس (فقط اگر دیتابیس موجود باشد)
+            if psql -U \"${{ secrets.DB_USER }}\" -lqt | cut -d \| -f 1 | grep -qw \"${{ secrets.DB_NAME }}\"; then
+              echo 'Creating database backup...'
+              pg_dump -U \"${{ secrets.DB_USER }}\" \"${{ secrets.DB_NAME }}\" > backup_\$(date +%Y%m%d_%H%M%S).sql || echo 'Backup failed but continuing...'
+            fi
             
-            python3 manage.py migrate user --verbosity 3 || exit 1
-            python3 manage.py migrate companies --verbosity 3 || exit 1
-            python3 manage.py migrate positions --verbosity 3 || exit 1
-            python3 manage.py migrate payment_gateway --verbosity 3 || exit 1
-            python3 manage.py migrate transactions --verbosity 3 || exit 1
-            python3 manage.py migrate stock_affairs --verbosity 3 || exit 1
-            python3 manage.py migrate core --verbosity 3 || exit 1
-            
-            # مایگریشن سایر اپ‌ها
-            for app in correspondence timeflow; do
-              echo \"Making migrations for \$app...\"
-              python3 manage.py migrate \$app --verbosity 3 || exit 1
-            done
+            # اجرای مایگریشن‌ها برای اپ‌های موجود
+            echo 'Running migrations for available apps...'
+            python3 manage.py migrate --verbosity 3 || exit 1
             
             # نمایش وضعیت مایگریشن‌ها
             echo 'Migration status:'
             python3 manage.py showmigrations
-            
-            # بررسی جداول
-            echo 'Verifying database tables...'
-            python3 manage.py shell -c \"from django.db import connection; cursor = connection.cursor(); cursor.execute('SELECT table_name FROM information_schema.tables WHERE table_schema = \\'public\\''); tables = cursor.fetchall(); print('Available tables:'); [print(table[0]) for table in tables]\"
           "
 
       - name: Setup Static Files
@@ -98,7 +87,7 @@ jobs:
           ssh -p $SERVER_PORT $SERVER_USER@$SERVER_HOST "
             cd $SERVER_DIR
             mkdir -p static media static_files
-            python3 manage.py collectstatic --noinput
+            python3 manage.py collectstatic --noinput --clear
           "
 
       - name: Set Permissions
