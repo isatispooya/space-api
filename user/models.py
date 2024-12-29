@@ -35,6 +35,7 @@ class User(AbstractUser):
     place_of_birth = models.CharField(max_length=255, null=True, blank=True)
     place_of_issue = models.CharField(max_length=255, null=True, blank=True)
     father_name = models.CharField(max_length=255, null=True, blank=True)
+    is_sejam_registered = models.BooleanField(default=True)
 
     EDUCATION_LEVELS = [
     ('highschool', 'دیپلم'),

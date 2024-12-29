@@ -4,7 +4,7 @@ from rest_framework.views import APIView
 from rest_framework.permissions import AllowAny , IsAdminUser , IsAuthenticated
 from .serializers import AnnouncementSerializer , ShortCutSerializer 
 from rest_framework.response import Response
-from stock_affairs.permission import IsShareholder , IsPrecedence , IsUnusedPrecedencePurchase
+from stock_affairs.permission import IsShareholder , IsPrecedence , IsUnderwriting
 
 
 
@@ -51,8 +51,8 @@ class MenuView(APIView):
         if IsPrecedence().has_permission(request, self) or request.user.is_staff:
             sub_menu.append({'title': 'حق تقدم','path': '/precendence/'})
 
-        if IsUnusedPrecedencePurchase().has_permission(request, self) or request.user.is_staff:
-            sub_menu.append({'title': 'خرید حق تقدم استفاده نشده','path': '/purchacePrecendence/'})
+        if IsUnderwriting().has_permission(request, self) or request.user.is_staff:
+            sub_menu.append({'title': 'پذیره نویسی','path': '/underwriting/'})
 
         if len(sub_menu)>0:
             main['sub_menu'] = sub_menu

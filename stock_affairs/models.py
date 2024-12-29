@@ -300,7 +300,7 @@ class UnusedPrecedenceProcess(models.Model):
         return f"{self.company}"
 
     
-class UnusedPrecedencePurchase(models.Model):
+class Underwriting(models.Model):
     user = models.ForeignKey(
         User, 
         on_delete=models.CASCADE,
@@ -365,8 +365,8 @@ class UnusedPrecedencePurchase(models.Model):
     )
     
     class Meta:
-        verbose_name = "خرید حق تقدم استفاده نشده"
-        verbose_name_plural = "خرید حق تقدم استفاده نشده"
+        verbose_name = "پذیره نویسی "
+        verbose_name_plural = "پذیره نویسی "
         ordering = ['-created_at']
         indexes = [
             models.Index(fields=['created_at']),

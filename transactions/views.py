@@ -3,7 +3,7 @@ from rest_framework.views import APIView
 from rest_framework.response import Response
 from rest_framework import status
 from transactions.models import Payment
-from stock_affairs.models import UnusedPrecedencePurchase
+from stock_affairs.models import Underwriting
 from payment_gateway.sep import SEPOnlinePayment
 from rest_framework.exceptions import ValidationError
 from django.utils import timezone
@@ -50,7 +50,6 @@ class VerfiyTransactionSepView(APIView):
             )
             verification_result = sep.verify_transaction(RefNum)
             data = verification_result.get('TransactionDetail', {})
-            print(data)
             if RRN:
                 payment.refrence_number = RRN
             else:

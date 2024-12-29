@@ -1,5 +1,5 @@
 from rest_framework.permissions import BasePermission
-from stock_affairs.models import Shareholders, Precedence, UnusedPrecedencePurchase, UnusedPrecedenceProcess
+from stock_affairs.models import Shareholders, Precedence, Underwriting, UnusedPrecedenceProcess
 
 class IsShareholder(BasePermission):
     def has_permission(self, request, view):
@@ -14,7 +14,6 @@ class IsShareholder(BasePermission):
     
     def get_permission_data(self, request, view):
         has_perm = self.has_permission(request, view)
-        print(has_perm)
         if has_perm:
             return {
                 "name": self.get_permission_name,
@@ -46,19 +45,19 @@ class IsPrecedence(BasePermission):
             }
         return None
 
-class IsUnusedPrecedencePurchase(BasePermission):
+class IsUnderwriting(BasePermission):
     def has_permission(self, request, view):
         if request.user.is_staff:
             return True
-        unused_precedence_purchase = UnusedPrecedencePurchase.objects.filter(
+        underwriting = Underwriting.objects.filter(
             requested_amount__gt=0
         )
-        return unused_precedence_purchase.exists()
+        return underwriting.exists()
 
 
     @property
     def get_permission_name(self):
-        return "unused_precedence_purchase"
+        return "underwriting"
 
     def get_permission_data(self, request, view):
         has_perm = self.has_permission(request, view)

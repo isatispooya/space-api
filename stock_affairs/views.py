@@ -1,13 +1,13 @@
 from django.shortcuts import render
 from rest_framework import viewsets
-from .models import Shareholders , StockTransfer , Precedence , CapitalIncreasePayment , DisplacementPrecedence , UnusedPrecedencePurchase , UnusedPrecedenceProcess
+from .models import Shareholders , StockTransfer , Precedence , CapitalIncreasePayment , DisplacementPrecedence , Underwriting , UnusedPrecedenceProcess
 from rest_framework.permissions import IsAuthenticated , IsAdminUser 
-from .serializers import ShareholdersSerializer , StockTransferSerializer , PrecedenceSerializer , CapitalIncreasePaymentSerializer , DisplacementPrecedenceSerializer , UnusedPrecedencePurchaseSerializer , UnusedPrecedenceProcessSerializer
+from .serializers import ShareholdersSerializer , StockTransferSerializer , PrecedenceSerializer , CapitalIncreasePaymentSerializer , DisplacementPrecedenceSerializer , UnderwritingSerializer , UnusedPrecedenceProcessSerializer
 from rest_framework.response import Response
 from rest_framework import status
 from django.db.models import Q
 from django.core.exceptions import ValidationError
-from stock_affairs.permission import IsShareholder , IsPrecedence , IsUnusedPrecedencePurchase , IsUnusedPrecedenceProcess
+from stock_affairs.permission import IsShareholder , IsPrecedence , IsUnderwriting , IsUnusedPrecedenceProcess
 from django.db import transaction
 from django.utils import timezone
 from django.db import models
@@ -491,7 +491,7 @@ class DisplacementPrecedenceViewset(viewsets.ModelViewSet):
 
 
 #  خرید حق تقدم استفاده نشده ایجاد کنید
-class CreateUnusedPurchase(APIView):
+class CreateUnderwritingViewset(APIView):
     permission_classes = [IsAuthenticated, IsUnusedPrecedenceProcess]
     http_method_names = ['get', 'post', 'patch', 'put']
     
@@ -501,28 +501,22 @@ class CreateUnusedPurchase(APIView):
     def get(self, request, pk=None):
         if pk:
             if request.user.is_staff:
-                purchase = get_object_or_404(UnusedPrecedencePurchase, id=pk)
+                underwriting = get_object_or_404(Underwriting, id=pk)
             else:
-                purchase = get_object_or_404(UnusedPrecedencePurchase, id=pk, user=request.user)
-            serializer = UnusedPrecedencePurchaseSerializer(purchase)
+                underwriting = get_object_or_404(Underwriting, id=pk, user=request.user)
+            serializer = UnderwritingSerializer(underwriting)
             return Response(serializer.data)
         
         if request.user.is_staff:
-            purchases = UnusedPrecedencePurchase.objects.all()
+            underwritings = Underwriting.objects.all()
         else:
-            purchases = UnusedPrecedencePurchase.objects.filter(user=request.user)
+            underwritings = Underwriting.objects.filter(user=request.user)
         
-        process = request.query_params.get('process')
-        status = request.query_params.get('status')
-        
-        if process:
-            purchases = purchases.filter(process_id=process)
-        if status:
-            purchases = purchases.filter(status=status)
+
             
-        purchases = purchases.order_by('-created_at')
+        underwritings = underwritings.order_by('-created_at')
         
-        serializer = UnusedPrecedencePurchaseSerializer(purchases, many=True)
+        serializer = UnderwritingSerializer(underwritings, many=True)
         return Response(serializer.data)
 
     def post(self, request):
@@ -551,7 +545,7 @@ class CreateUnusedPurchase(APIView):
 
         invoice_unique_id=str(uuid.uuid4())
         # ایجاد خرید
-        purchase = UnusedPrecedencePurchase.objects.create(
+        underwriting = Underwriting.objects.create(
             user=request.user,
             process=process,
             requested_amount=amount,
@@ -571,7 +565,7 @@ class CreateUnusedPurchase(APIView):
                 )
 
                 if token_response['status'] == -1:
-                    purchase.delete()  # حذف خرید در صورت خطا
+                    underwriting.delete()  # حذف خرید در صورت خطا
                     raise ValidationError({"error": "خطا در ایجاد تراکنش"})
 
                 payment_url = sep.redirect_to_payment(token_response['token'])
@@ -582,8 +576,8 @@ class CreateUnusedPurchase(APIView):
                     status='pending'
                 )
                 transaction.save()
-                purchase.payment = transaction
-                purchase.save()
+                underwriting.payment = transaction
+                underwriting.save()
 
                 return Response({'redirect_url': payment_url}, status=status.HTTP_200_OK)
 
@@ -594,8 +588,8 @@ class CreateUnusedPurchase(APIView):
             if not request.FILES.get('document'):
                 raise ValidationError({"error": "آپلود فیش پرداخت الزامی است"})
             
-            purchase.document = request.FILES['document']
-            purchase.save()
+            underwriting.document = request.FILES['document']
+            underwriting.save()
             return Response({"message": "خرید با موفقیت ثبت شد"}, status=status.HTTP_201_CREATED)
         
         else:
@@ -612,16 +606,16 @@ class CreateUnusedPurchase(APIView):
         if not new_status:
             raise ValidationError({"error": "وضعیت جدید الزامی است"})
         
-        purchase = get_object_or_404(UnusedPrecedencePurchase, id=pk)
-        if purchase.type == '1':
-            purchase.status = new_status
-            purchase.updated_at = timezone.now()
-            purchase.save()
+        underwriting = get_object_or_404(Underwriting, id=pk)
+        if underwriting.type == '1':
+            # underwriting.status = new_status
+            underwriting.updated_at = timezone.now()
+            underwriting.save()
         else:
-            purchase.payment.status = new_status
-            purchase.payment.updated_at = timezone.now()
-            purchase.payment.save()
-        serializer = UnusedPrecedencePurchaseSerializer(purchase)
+            # underwriting.payment.status = new_status
+            underwriting.payment.updated_at = timezone.now()
+            underwriting.payment.save()
+        serializer = UnderwritingSerializer(underwriting)
 
         return Response({"message" : "وضعیت خرید با موفقیت به‌روزرسانی شد","data" : serializer.data },  status=status.HTTP_200_OK)
 
@@ -638,6 +632,6 @@ class UnusedPrecedenceProcessViewset(viewsets.ModelViewSet):
             return super().get_queryset().filter(is_active=True)
 
 
-    
+
 
 

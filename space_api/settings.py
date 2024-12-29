@@ -74,8 +74,8 @@ REST_FRAMEWORK = {
         'rest_framework.throttling.UserRateThrottle'
     ],
     'DEFAULT_THROTTLE_RATES': {
-        'anon': '100/minute',  # محدودیت برای کاربران ناشناس
-        'user': '1000/minute'  # محدودیت برای کاربران احراز هویت شده
+        'anon': '10000/minute',  # محدودیت برای کاربران ناشناس
+        'user': '10000/minute'  # محدودیت برای کاربران احراز هویت شده
     }
 }
 
@@ -103,7 +103,7 @@ SIMPLE_JWT = {
     'AUTH_HEADER_TYPES': ('Bearer',),
     'USER_ID_FIELD': 'id',
     'USER_ID_CLAIM': 'user_id',
-    'ACCESS_TOKEN_LIFETIME': timedelta(minutes=60),
+    'ACCESS_TOKEN_LIFETIME': timedelta(minutes=240),
     'REFRESH_TOKEN_LIFETIME': timedelta(days=1),
     'AUTH_TOKEN_CLASSES': (
         'rest_framework_simplejwt.tokens.AccessToken',
