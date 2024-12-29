@@ -241,6 +241,35 @@ class DisplacementPrecedence(models.Model):
             })
 
 
+class Appendices(models.Model):
+    file = models.FileField(
+        upload_to='stock_affairs/appendices/',
+        verbose_name="فایل"
+    )
+    name = models.CharField(
+        max_length=255,
+        verbose_name="نام"
+    )
+    created_at = models.DateTimeField(
+        default=timezone.now,
+        verbose_name="تاریخ ایجاد"
+    )
+    updated_at = models.DateTimeField(
+        auto_now=True,
+        verbose_name="تاریخ به‌روزرسانی"
+    )
+    class Meta:
+        verbose_name = "ضمیمه"
+        verbose_name_plural = "ضمیمه‌ها"
+        ordering = ['-created_at']
+        indexes = [
+            models.Index(fields=['created_at']),
+        ]
+
+    def __str__(self):
+        return f"{self.name}"
+
+
 class UnusedPrecedenceProcess(models.Model):
     company = models.ForeignKey(
         Company, 
@@ -275,6 +304,14 @@ class UnusedPrecedenceProcess(models.Model):
     is_active = models.BooleanField(
         default=True , 
         verbose_name="فعال"
+    )
+    appendices = models.ForeignKey(
+        Appendices,
+        on_delete=models.CASCADE,
+        related_name='underwriting',
+        null=True,
+        blank=True,
+        verbose_name="ضمیمه"
     )
     end_date = models.DateTimeField(
         default=timezone.now,
