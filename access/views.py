@@ -5,7 +5,7 @@ from django.contrib.auth.models import Permission
 from .serializer import PermissionSerializer
 from rest_framework.response import Response
 from user.models import User
-from stock_affairs.permission import IsUnusedPrecedenceProcess , IsPrecedence , IsShareholder , IsUnusedPrecedencePurchase
+from stock_affairs.permission import IsUnusedPrecedenceProcess , IsPrecedence , IsShareholder , IsUnderwriting
 
 
 class PermissionListView(APIView):
@@ -45,12 +45,12 @@ class PermissionListForUserView(APIView):
         unused_precedence_process_perm = IsUnusedPrecedenceProcess()
         precedence_perm = IsPrecedence()
         shareholder_perm = IsShareholder()
-        unused_precedence_purchase_perm = IsUnusedPrecedencePurchase()
+        underwriting_perm = IsUnderwriting()
         
         perm_data_unused_precedence_process = unused_precedence_process_perm.get_permission_data(request, self)
         perm_data_precedence = precedence_perm.get_permission_data(request, self)
         perm_data_shareholder = shareholder_perm.get_permission_data(request, self)
-        perm_data_unused_precedence_purchase = unused_precedence_purchase_perm.get_permission_data(request, self)
+        perm_data_underwriting = underwriting_perm.get_permission_data(request, self)
         if perm_data_unused_precedence_process:
             permissions = list(permissions)
             permissions.append(perm_data_unused_precedence_process)
@@ -58,8 +58,8 @@ class PermissionListForUserView(APIView):
             permissions.append(perm_data_precedence)
         if perm_data_shareholder:
             permissions.append(perm_data_shareholder)
-        if perm_data_unused_precedence_purchase:
-            permissions.append(perm_data_unused_precedence_purchase)
+        if perm_data_underwriting:
+            permissions.append(perm_data_underwriting)
     
 
         serializer = PermissionSerializer(permissions, many=True)

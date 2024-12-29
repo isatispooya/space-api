@@ -1,5 +1,5 @@
 from rest_framework import serializers
-from .models import Shareholders , StockTransfer , Precedence , CapitalIncreasePayment , DisplacementPrecedence , UnusedPrecedencePurchase , UnusedPrecedenceProcess
+from .models import Shareholders , StockTransfer , Precedence , CapitalIncreasePayment , DisplacementPrecedence , Underwriting , UnusedPrecedenceProcess
 from companies.serializers import CompanySerializer
 from user.serializers import UserSerializer
 class ShareholdersSerializer(serializers.ModelSerializer):
@@ -48,9 +48,9 @@ class DisplacementPrecedenceSerializer(serializers.ModelSerializer):
         model = DisplacementPrecedence
         fields = '__all__'
 
-class UnusedPrecedencePurchaseSerializer(serializers.ModelSerializer):
+class UnderwritingSerializer(serializers.ModelSerializer):
     class Meta:
-        model = UnusedPrecedencePurchase
+        model = Underwriting
         fields = '__all__'
 
 class UnusedPrecedenceProcessSerializer(serializers.ModelSerializer):

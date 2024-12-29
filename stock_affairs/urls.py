@@ -1,6 +1,6 @@
 from django.urls import path , include 
 from rest_framework.routers import DefaultRouter
-from .views import ShareholdersViewset , StockTransferViewset ,PrecedenceViewset , CapitalIncreasePaymentViewset , DisplacementPrecedenceViewset , CreateUnusedPurchase , UnusedPrecedenceProcessViewset
+from .views import ShareholdersViewset , StockTransferViewset ,PrecedenceViewset , CapitalIncreasePaymentViewset , DisplacementPrecedenceViewset , CreateUnderwritingViewset , UnusedPrecedenceProcessViewset
 
 router = DefaultRouter()
 router.register('shareholders', ShareholdersViewset)
@@ -13,8 +13,8 @@ router.register('unused_precedence_process', UnusedPrecedenceProcessViewset)
 urlpatterns = router.urls
 
 urlpatterns += [
-    path('create_unused_purchase/', CreateUnusedPurchase.as_view(), name='create-unused-purchase'),
-    path('create_unused_purchase/<int:pk>/', CreateUnusedPurchase.as_view(), name='create-unused-purchase-detail'),
+    path('create_underwriting/', CreateUnderwritingViewset.as_view(), name='create-underwriting'),
+    path('create_underwriting/<int:pk>/', CreateUnderwritingViewset.as_view(), name='create-underwriting-detail'),
 ]
 
 
