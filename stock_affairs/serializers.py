@@ -3,6 +3,7 @@ from .models import Shareholders , StockTransfer , Precedence , CapitalIncreaseP
 from companies.serializers import CompanySerializer
 from user.serializers import UserSerializer
 from transactions.serializers import PaymentSerializer
+from payment_gateway.serializers import PaymentGatewaySerializer
 class ShareholdersSerializer(serializers.ModelSerializer):
     company_detail = CompanySerializer(source='company', read_only=True)
     user_detail = UserSerializer(source='user', read_only=True)
@@ -49,12 +50,6 @@ class DisplacementPrecedenceSerializer(serializers.ModelSerializer):
         model = DisplacementPrecedence
         fields = '__all__'
 
-class UnusedPrecedenceProcessSerializer(serializers.ModelSerializer):
-    company = serializers.StringRelatedField()
-    
-    class Meta:
-        model = UnusedPrecedenceProcess
-        fields = '__all__'
 
 
 class AppendicesSerializer(serializers.ModelSerializer):
@@ -67,12 +62,22 @@ class ProcessDescriptionSerializer(serializers.ModelSerializer):
         model = ProcessDescription
         fields = '__all__'
 
+
+class UnusedPrecedenceProcessSerializer(serializers.ModelSerializer):
+    company = serializers.StringRelatedField()
+    appendices_data = AppendicesSerializer(source='appendices', read_only=True)
+    process_description_data = ProcessDescriptionSerializer(source='process_description', read_only=True)
+    payment_gateway_data = PaymentGatewaySerializer(source='payment_gateway', read_only=True)
+
+    class Meta:
+        model = UnusedPrecedenceProcess
+        fields = '__all__'
+
+
 class UnderwritingSerializer(serializers.ModelSerializer):
-    appendices = AppendicesSerializer(read_only=True)
-    process_detail = UnusedPrecedenceProcessSerializer(source='unused_precedence_process', read_only=True)
+    process_detail = UnusedPrecedenceProcessSerializer(source='process', read_only=True)
     payment_detail = PaymentSerializer(source='payment', read_only=True)
     user_detail = UserSerializer(source='user', read_only=True)
-    process_description = ProcessDescriptionSerializer(read_only=True)
 
     class Meta:
         model = Underwriting
