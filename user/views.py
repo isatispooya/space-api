@@ -50,6 +50,9 @@ class OtpSejamViewset(APIView):
             'Content-Type': 'application/json'
             }
             response = requests.request("POST", url, headers=headers, data=payload)
+            print(uniqueIdentifier)
+            print(response.content)
+            print(response.status_code)
             if response.status_code >=300 :
                 return Response ({'message' :'شما سجامی نیستید'} , status=status.HTTP_400_BAD_REQUEST)
             return Response ({'registered' :False , 'message' : 'کد تایید ارسال شد'},status=status.HTTP_200_OK)
