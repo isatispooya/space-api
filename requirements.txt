@@ -7,7 +7,7 @@ djangorestframework-simplejwt>=5.2.2
 django-ratelimit>=4.1.0
 
 # کپچا
-GuardPyCaptcha>=1.0.0
+GuardPyCaptcha
 
 # متغیرهای محیطی
 python-dotenv>=1.0.0
