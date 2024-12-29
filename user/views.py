@@ -20,7 +20,8 @@ from utils.legal import is_legal_person
 from rest_framework_simplejwt.tokens import RefreshToken 
 import random
 from utils.notification_service import NotificationService
-
+import logging
+logger = logging.getLogger(__name__)
 
 # otp sejam
 class OtpSejamViewset(APIView):
@@ -50,9 +51,10 @@ class OtpSejamViewset(APIView):
             'Content-Type': 'application/json'
             }
             response = requests.request("POST", url, headers=headers, data=payload)
-            print(uniqueIdentifier)
-            print(response.content)
-            print(response.status_code)
+
+            logger.info(f"uniqueIdentifier: {uniqueIdentifier}")
+            logger.info(f"response content: {response.content}")  
+            logger.info(f"status code: {response.status_code}")
             if response.status_code >=300 :
                 return Response ({'message' :'شما سجامی نیستید'} , status=status.HTTP_400_BAD_REQUEST)
             return Response ({'registered' :False , 'message' : 'کد تایید ارسال شد'},status=status.HTTP_200_OK)
