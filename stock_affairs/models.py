@@ -375,6 +375,12 @@ class UnusedPrecedenceProcess(models.Model):
         blank=True,
         verbose_name="ضمیمه"
     )
+    sheba_number = models.CharField(
+        max_length=255,
+        null=True , 
+        blank=True , 
+        verbose_name="شماره شبا"
+    )
     end_date = models.DateTimeField(
         default=timezone.now,
         verbose_name="تاریخ اتمام "
