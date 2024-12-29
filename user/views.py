@@ -616,3 +616,19 @@ class SejamDataReceiverViewset(APIView):
             }, status=status.HTTP_400_BAD_REQUEST)
 
 
+class UserUpdateProfileImageViewset(APIView):
+    permission_classes = [IsAuthenticated]
+    queryset = User.objects.all()
+    serializer_class = UserSerializer
+    def get_permissions(self):
+        if self.request.method == 'PATCH':
+            return [IsAuthenticated()]
+        return super().get_permissions()
+    
+    def patch(self, request):
+        user = request.user
+        user_serializer = UserSerializer(user).data
+        if request.FILES.get('profile_image'):
+            user.profile_image = request.FILES.get('profile_image')
+            user.save()
+        return Response(user_serializer, status=status.HTTP_200_OK)
