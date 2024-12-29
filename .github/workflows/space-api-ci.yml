@@ -66,20 +66,28 @@ jobs:
             # بررسی وضعیت PostgreSQL
             echo 'Checking PostgreSQL status...'
             systemctl is-active postgresql || systemctl start postgresql
+            sleep 5  # صبر برای اطمینان از راه‌اندازی کامل PostgreSQL
             
-            # پشتیبان‌گیری از دیتابیس (فقط اگر دیتابیس موجود باشد)
-            if psql -U \"${{ secrets.DB_USER }}\" -lqt | cut -d \| -f 1 | grep -qw \"${{ secrets.DB_NAME }}\"; then
-              echo 'Creating database backup...'
-              pg_dump -U \"${{ secrets.DB_USER }}\" \"${{ secrets.DB_NAME }}\" > backup_\$(date +%Y%m%d_%H%M%S).sql || echo 'Backup failed but continuing...'
-            fi
+            # ایجاد مجدد دیتابیس
+            echo 'Recreating database...'
+            psql -U \"${{ secrets.DB_USER }}\" -c \"DROP DATABASE IF EXISTS \\\"${{ secrets.DB_NAME }}\\\";\"
+            psql -U \"${{ secrets.DB_USER }}\" -c \"CREATE DATABASE \\\"${{ secrets.DB_NAME }}\\\";\"
             
-            # اجرای مایگریشن‌ها برای اپ‌های موجود
-            echo 'Running migrations for available apps...'
-            python3 manage.py migrate --verbosity 3 || exit 1
+            # ساخت و اجرای مایگریشن‌ها
+            echo 'Making and applying migrations...'
+            python3 manage.py makemigrations core --verbosity 3
+            python3 manage.py migrate core --verbosity 3
+            
+            # اجرای سایر مایگریشن‌ها
+            python3 manage.py migrate --verbosity 3
+            
+            # بررسی وضعیت جداول
+            echo 'Verifying database tables...'
+            psql -U \"${{ secrets.DB_USER }}\" -d \"${{ secrets.DB_NAME }}\" -c '\\dt core_*'
             
             # نمایش وضعیت مایگریشن‌ها
             echo 'Migration status:'
-            python3 manage.py showmigrations
+            python3 manage.py showmigrations core
           "
 
       - name: Setup Static Files
