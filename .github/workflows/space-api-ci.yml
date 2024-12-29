@@ -40,7 +40,7 @@ jobs:
           ssh -p $SERVER_PORT $SERVER_USER@$SERVER_HOST "
             cd $SERVER_DIR
             echo DEBUG=False > .env
-            echo ALLOWED_HOSTS=localhost,127.0.0.1,31.40.4.92 >> .env
+            echo ALLOWED_HOSTS=localhost,127.0.0.1,31.40.4.92,spaceapi.isatispooya.com,* >> .env
             echo DB_NAME='${{ secrets.DB_NAME }}' >> .env
             echo DB_USER='${{ secrets.DB_USER }}' >> .env
             echo DB_PASSWORD='${{ secrets.DB_PASSWORD }}' >> .env

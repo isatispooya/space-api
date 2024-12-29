@@ -17,7 +17,7 @@ SECRET_KEY = "JQ_081PCdOvbHfaKInG6996boObSBOobsmSNj-UoB-L_VvJEpIb_J_vsKfVTTAYHan
 
 DEBUG = True#os.getenv('DEBUG', 'False') == 'True'
 
-ALLOWED_HOSTS = os.getenv('ALLOWED_HOSTS', '').split(',')
+ALLOWED_HOSTS = ['localhost', '127.0.0.1', '31.40.4.92', 'spaceapi.isatispooya.com','*']
 
 CORS_ALLOW_ALL_ORIGINS = True
 
