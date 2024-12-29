@@ -9,6 +9,7 @@ jobs:
     runs-on: ubuntu-latest
     env:
       SSH_PRIVATE_KEY: ${{ secrets.SSH_PRIVATE_KEY }}
+      DJANGO_SECRET_KEY: ${{ secrets.DJANGO_SECRET_KEY }}
       SERVER_USER: "root"
       SERVER_HOST: "31.40.4.92"
       SERVER_PORT: "2233"
@@ -34,12 +35,27 @@ jobs:
             git clone https://github.com/isatispooya/space-api.git . || { echo 'Git clone failed'; exit 1; }
           "
 
+      - name: Setup Environment Variables
+        run: |
+          ssh -p $SERVER_PORT $SERVER_USER@$SERVER_HOST "
+            cd $SERVER_DIR
+            echo 'DJANGO_SECRET_KEY=${{ secrets.DJANGO_SECRET_KEY }}' > .env
+            echo 'DEBUG=False' >> .env
+            echo 'ALLOWED_HOSTS=localhost,127.0.0.1,31.40.4.92' >> .env
+            echo 'DB_NAME=${{ secrets.DB_NAME }}' >> .env
+            echo 'DB_USER=${{ secrets.DB_USER }}' >> .env
+            echo 'DB_PASSWORD=${{ secrets.DB_PASSWORD }}' >> .env
+            echo 'DB_HOST=localhost' >> .env
+            echo 'DB_PORT=5432' >> .env
+          "
+
       - name: Install Dependencies
         run: |
           ssh -p $SERVER_PORT $SERVER_USER@$SERVER_HOST "
             cd $SERVER_DIR
             apt-get update && apt-get install -y python3-pip
             python3 -m pip install --upgrade pip
+            python3 -m pip install python-dotenv
             python3 -m pip install -r requirements.txt --root-user-action=ignore
           "
 
