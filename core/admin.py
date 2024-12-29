@@ -10,9 +10,7 @@ class AnnouncementAdmin(admin.ModelAdmin):
         ('اطلاعات اصلی', {
             'fields': ['title' , 'description' , 'picture' , 'link' , 'is_active']
         }),
-        ('تاریخ‌ها', {
-            'fields': ['updated_at']
-        })
+
     ]
 
 
@@ -25,7 +23,5 @@ class ShortCutAdmin(admin.ModelAdmin):
         ('اطلاعات اصلی', {
             'fields': ['title' , 'link' , 'is_active']
         }),
-        ('تاریخ‌ها', {
-            'fields': ['created_at' , 'updated_at']
-        })
+
     ]
