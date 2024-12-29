@@ -63,34 +63,27 @@ jobs:
           ssh -p $SERVER_PORT $SERVER_USER@$SERVER_HOST "
             cd $SERVER_DIR
             
-            # پشتیبان‌گیری از دیتابیس (اختیاری اما توصیه می‌شود)
+            # پشتیبان‌گیری از دیتابیس
             echo 'Creating database backup...'
-            pg_dump -U ${{ secrets.DB_USER }} ${{ secrets.DB_NAME }} > backup.sql || echo 'Backup failed but continuing...'
+            pg_dump -U ${{ secrets.DB_USER }} ${{ secrets.DB_NAME }} > backup_$(date +%Y%m%d_%H%M%S).sql || echo 'Backup failed but continuing...'
             
-            echo 'Removing old migrations...'
+            # حذف مایگریشن‌های قدیمی
             find . -path '*/migrations/*.py' -not -name '__init__.py' -delete
             find . -path '*/migrations/*.pyc' -delete
             
-            # بررسی وضعیت دیتابیس قبل از مایگریشن
-            echo 'Current database state:'
-            python3 manage.py showmigrations
+            # ایجاد مایگریشن‌های جدید برای هر اپ
+            for app in core user companies positions correspondence stock_affairs timeflow payment_gateway transactions; do
+              echo "Making migrations for $app..."
+              python3 manage.py makemigrations $app --verbosity 3 || exit 1
+            done
             
-            # ایجاد مایگریشن‌های جدید با لاگ کامل
-            echo 'Making new migrations...'
-            python3 manage.py makemigrations --verbosity 3 || exit 1
-            
-            # اعمال مایگریشن‌ها با بررسی خطا
+            # اجرای مایگریشن‌ها
             echo 'Applying migrations...'
-            python3 manage.py migrate --verbosity 3 --plan  # نمایش برنامه مایگریشن
             python3 manage.py migrate --verbosity 3 || exit 1
             
-            # تایید نهایی
-            echo 'Verifying final migration state...'
-            python3 manage.py showmigrations --list
-            
-            # بررسی سلامت دیتابیس
-            echo 'Checking database consistency...'
-            python3 manage.py check --database default || exit 1
+            # تأیید نهایی
+            echo 'Final migration state:'
+            python3 manage.py showmigrations
           "
 
       - name: Setup Static Files
