@@ -4,20 +4,21 @@ from django.conf import settings
 from django.conf.urls.static import static
 from rest_framework import routers
 
-from positions.views import PositionViewset
-
 router = routers.DefaultRouter()
-router.register(r'positions', PositionViewset)
+
 
 urlpatterns = [
     path('admin/', admin.site.urls),
     path('' , include('user.urls')),
     path('' , include('authentication.urls')),
     path('' , include('access.urls')),
-    path('' , include('companies.urls')),
-    path('' , include(router.urls)),
+    path('companies/' , include('companies.urls')),
+    path('positions/' , include('positions.urls')),
     path('correspondence/', include('correspondence.urls')),
-
+    path('stock_affairs/' , include('stock_affairs.urls')),
+    path('core/' , include('core.urls')),
+    path('timeflow/' , include('timeflow.urls')),
+    path('transactions/' , include('transactions.urls')),
 ]
 
 # سرو فایل‌های استاتیک و مدیا در هر حالت

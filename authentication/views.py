@@ -12,6 +12,16 @@ from rest_framework.permissions import IsAdminUser
 from rest_framework.response import Response
 from django.contrib.auth.models import Group 
 from .serializer import GroupSerializer
+from django.contrib.auth import get_user_model
+from rest_framework.viewsets import ModelViewSet
+from rest_framework_simplejwt.tokens import RefreshToken
+from rest_framework.permissions import IsAuthenticated
+from timeflow.models import UserLoginLog
+from rest_framework_simplejwt.exceptions import TokenError
+from rest_framework_simplejwt.views import TokenObtainPairView, TokenRefreshView
+from django.utils import timezone
+import user_agents  
+from rest_framework_simplejwt.serializers import TokenRefreshSerializer
 
 class CaptchaViewset(APIView) :
     permission_classes = [AllowAny]
@@ -20,6 +30,7 @@ class CaptchaViewset(APIView) :
         captcha = GuardPyCaptcha ()
         captcha = captcha.Captcha_generation(num_char=4 , only_num= True)
         return Response ({'captcha' : captcha} , status = status.HTTP_200_OK)
+
     
 class GroupManagementViewSet(viewsets.ModelViewSet):
     queryset = Group.objects.all()
@@ -67,4 +78,152 @@ class GroupManagementViewSet(viewsets.ModelViewSet):
             )
         
 
+User = get_user_model()
+class UserToGroupViewSet(ModelViewSet):
+    permission_classes = [IsAdminUser]
+    
+    def assign_group(self, request):
+        try:
+            user_id = request.data.get('user_id')
+            group_ids = request.data.get('groups', [])
+            
+            user = User.objects.get(id=user_id)
+            
+            user.groups.set(group_ids)
+            
+            return Response({
+                'message': 'کاربر با موفقیت به گروه‌ها اضافه شد',
+                'user': user.username,
+                'groups': list(user.groups.values_list('name', flat=True))
+            }, status=status.HTTP_200_OK)
+            
+        except User.DoesNotExist:
+            return Response(
+                {'error': 'کاربر مورد نظر یافت نشد'},
+                status=status.HTTP_404_NOT_FOUND
+            )
+        except Exception as e:
+            return Response(
+                {'error': str(e)},
+                status=status.HTTP_400_BAD_REQUEST
+            )
 
+
+class LogoutView(APIView):
+    permission_classes = [IsAuthenticated]
+    
+    def post(self, request):
+        try:
+            refresh_token = request.data.get("refresh")
+            if not refresh_token:
+                return Response(
+                    {"error": "refresh_token is required"}, 
+                    status=status.HTTP_400_BAD_REQUEST
+                )
+            
+            try:
+                # تبدیل رشته به شیء RefreshToken
+                token = RefreshToken(refresh_token)
+                # بلک‌لیست کردن توکن
+                token.blacklist()
+            except TokenError as e:
+                return Response(
+                    {"error": f"Invalid token: {str(e)}"}, 
+                    status=status.HTTP_400_BAD_REQUEST
+                )
+            
+            UserLoginLog.objects.create(
+                user=request.user,
+                type='logout',
+                ip_address=request.META.get('REMOTE_ADDR'),
+                user_agent=request.META.get('HTTP_USER_AGENT')
+            )
+            
+            return Response(
+                {"detail": "Successfully logged out"}, 
+                status=status.HTTP_200_OK
+            )
+            
+        except Exception as e:
+            return Response(
+                {"error": str(e)},
+                status=status.HTTP_400_BAD_REQUEST
+            )
+        
+
+class CustomTokenObtainPairView(TokenObtainPairView):
+    def post(self, request, *args, **kwargs):
+        response = super().post(request, *args, **kwargs)
+        
+        if response.status_code == 200:
+            # پیدا کردن کاربر از طریق نام کاربری ارسال شده
+            username = request.data.get('username')
+            user = User.objects.get(username=username)
+            
+            # دریافت اطلاعات درخواست
+            x_forwarded_for = request.META.get('HTTP_X_FORWARDED_FOR')
+            if x_forwarded_for:
+                ip = x_forwarded_for.split(',')[0]
+            else:
+                ip = request.META.get('REMOTE_ADDR')
+                
+            user_agent = request.META.get('HTTP_USER_AGENT', '')
+            device_type = 'موبایل' if 'Mobile' in user_agent else 'دسکتاپ'
+            
+            # ایجاد لاگ ورود با کاربر پیدا شده
+            UserLoginLog.objects.create(
+                user=user,  # استفاده از کاربر پیدا شده به جای request.user
+                type='login',
+                ip_address=ip,
+                device_type=device_type,
+                user_agent=user_agent
+            )
+            
+        return response
+    
+
+class CustomTokenRefreshView(TokenRefreshView):
+    serializer_class = TokenRefreshSerializer
+
+    def post(self, request, *args, **kwargs):
+        # ابتدا پاسخ را دریافت می‌کنیم
+        response = super().post(request, *args, **kwargs)
+        
+        if response.status_code == 200:
+            try:
+                refresh_token = request.data.get('refresh')
+                token = RefreshToken(refresh_token)
+                # دریافت کاربر از توکن
+                user_id = token.payload.get('user_id')
+                user = User.objects.get(id=user_id)
+
+                # دریافت User-Agent
+                user_agent_string = request.META.get('HTTP_USER_AGENT', '')
+                user_agent = user_agents.parse(user_agent_string)
+                
+                # ثبت لاگ
+                UserLoginLog.objects.create(
+                    user=user,  # استفاده از کاربر استخراج شده از توکن
+                    time=timezone.now(),
+                    type='refresh',
+                    ip_address=request.META.get('REMOTE_ADDR'),
+                    device_type='Mobile' if user_agent.is_mobile else 'Desktop',
+                    os_type=user_agent.os.family,
+                    browser=f"{user_agent.browser.family} {user_agent.browser.version_string}",
+                    user_agent=user_agent_string
+                )
+            except Exception as e:
+                # در صورت بروز خطا در ثبت لاگ، فقط لاگ را نادیده می‌گیریم
+                # و همچنان پاسخ موفق را برمی‌گردانیم
+                pass
+        
+        return response
+    
+
+
+        
+
+
+           
+            
+ 

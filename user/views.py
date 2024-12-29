@@ -17,9 +17,10 @@ from .date import parse_date
 from datetime import timedelta
 from uuid import uuid4
 from utils.legal import is_legal_person
-from utils.sms import SendSmsCode
 from rest_framework_simplejwt.tokens import RefreshToken 
 import random
+from utils.notification_service import NotificationService
+
 
 # otp sejam
 class OtpSejamViewset(APIView):
@@ -38,7 +39,7 @@ class OtpSejamViewset(APIView):
         uniqueIdentifier = request.data['uniqueIdentifier']
         if not uniqueIdentifier :
             return Response ({'message' : 'کد ملی را وارد کنید'} , status=status.HTTP_400_BAD_REQUEST)
-        user = User.objects.filter (uniqueIdentifier = uniqueIdentifier).first()
+        user = User.objects.filter (uniqueIdentifier = uniqueIdentifier,is_sejam_registered=True).first()
         if not user:
             url = "http://31.40.4.92:8870/otp"
             payload = json.dumps({
@@ -82,7 +83,6 @@ class RegisterViewset(APIView):
             response = json.loads(response.content)
             try :
                 data = response['data']
-                print(data)
             except:
                 return Response({'message' :'1دوباره تلاش کن '}, status=status.HTTP_400_BAD_REQUEST)
             if data == None :
@@ -91,35 +91,39 @@ class RegisterViewset(APIView):
             private_person_data = data['privatePerson']
             if not new_user :
                
-                new_user = User(
-                    username=data.get('uniqueIdentifier'),
-                    email=data.get('email'),
-                    is_active=True,
-                    first_name=private_person_data.get('firstName'),
-                    last_name=private_person_data.get('lastName'),
-                    mobile=data.get('mobile'),
-                    gender='M' if private_person_data.get('gender') == 'Male' else 'F' if private_person_data.get('gender') == 'Female' else None,
-                    birth_date=parse_date(private_person_data.get('birthDate')),  
-                    created_at=parse_date(data.get('createdAt')),
-                    updated_at=parse_date(data.get('updatedAt')),
-                    address=data['addresses'][0].get('remnantAddress') if data.get('addresses') and len(data['addresses']) > 0 else None,
-                    profile_image=None,
-                    last_login=None,
-                    status=True if data.get('status') == 'Sejami' else False,
-                    bio=None,
-                    uniqueIdentifier=data.get('uniqueIdentifier'),
-                    chat_id_telegram=None,
-                    last_password_change=None,
-                    login_attempts=0,
-                    seri_shenasname=private_person_data.get('seriSh'),
-                    seri_shenasname_char=private_person_data.get('seriShChar'),
-                    serial_shenasname=private_person_data.get('serial'),
-                    place_of_birth=private_person_data.get('placeOfBirth'),
-                    place_of_issue=private_person_data.get('placeOfIssue'),
-                    father_name=private_person_data.get('fatherName'),
-                    education_level=None,
-                    marital_status=None,
+                new_user, created = User.objects.update_or_create(
+                    uniqueIdentifier=uniqueIdentifier,
+                    defaults={
+                        'username': uniqueIdentifier,
+                        'email': data.get('email'),
+                        'is_active': True,
+                        'first_name': private_person_data.get('firstName'),
+                        'last_name': private_person_data.get('lastName'),
+                        'mobile': data.get('mobile'),
+                        'gender': 'M' if private_person_data.get('gender') == 'Male' else 'F' if private_person_data.get('gender') == 'Female' else None,
+                        'birth_date': parse_date(private_person_data.get('birthDate')),
+                        'created_at': parse_date(data.get('createdAt')),
+                        'updated_at': parse_date(data.get('updatedAt')),
+                        'address': data['addresses'][0].get('remnantAddress') if data.get('addresses') and len(data['addresses']) > 0 else None,
+                        'profile_image': None,
+                        'last_login': None,
+                        'status': True if data.get('status') == 'Sejami' else False,
+                        'bio': None,
+                        'chat_id_telegram': None,
+                        'last_password_change': None,
+                        'login_attempts': 0,
+                        'seri_shenasname': private_person_data.get('seriSh'),
+                        'seri_shenasname_char': private_person_data.get('seriShChar'),
+                        'serial_shenasname': private_person_data.get('serial'),
+                        'place_of_birth': private_person_data.get('placeOfBirth'),
+                        'place_of_issue': private_person_data.get('placeOfIssue'),
+                        'father_name': private_person_data.get('fatherName'),
+                        'education_level': None,
+                        'marital_status': None,
+                        'is_sejam_registered': True,
+                    }
                 )
+                new_user = User.objects.get(uniqueIdentifier=data.get('uniqueIdentifier'))
                 new_user.set_password(data.get('uniqueIdentifier'))
                 new_user.save()
                     
@@ -278,11 +282,11 @@ class ForgotPasswordViewset(APIView):
         expire = timezone.now() + timedelta(minutes=10)
         code_create, created = CodeForgotPassword.objects.update_or_create(user=user,defaults={'code': random.randint(100000, 999999),'expire': expire, 'status': False})
         serializer = CodeForgotPasswordSerializer(code_create).data
-        print(serializer['code'])
         code = serializer['code']
-        
-        SendSmsCode(mobile, code)
-        
+
+        notification_service = NotificationService()
+        notification_service.send_sms(to = str(mobile), message=str(code), template='password_reset')
+
         if created:
             code_create.status = True
             code_create.save()
@@ -297,7 +301,6 @@ class ForgotPasswordViewset(APIView):
             return Response({'message': 'کد تایید وارد نشده است'}, status=status.HTTP_400_BAD_REQUEST)
         
         code_obj = CodeForgotPassword.objects .filter(code=code,status=False, expire__gte=timezone.now()).first()
-        print(code_obj)
 
         if not code_obj:
             return Response({'message': 'کد تایید اشتباه است یا منقضی شده است'}, status=status.HTTP_400_BAD_REQUEST)
@@ -430,3 +433,186 @@ class UserDetailViewset(APIView):
         
         except User.DoesNotExist:
             return Response({'message': 'کاربر یافت نشد'}, status=status.HTTP_404_NOT_FOUND)
+        
+
+class SejamDataReceiverViewset(APIView):
+    permission_classes = [AllowAny]
+
+
+    def post(self, request):
+        try:
+            # دریافت داده‌ها از مونگو
+            data = request.data
+            uniqueIdentifier = data.get('uniqueIdentifier')
+            if not uniqueIdentifier:
+                return Response({'message': 'شناسه یکتا وجود ندارد'}, status=status.HTTP_400_BAD_REQUEST)
+
+            # چک کردن وجود یوزر
+            if User.objects.filter(uniqueIdentifier=uniqueIdentifier).exists():
+                return Response({'message': 'کاربر قبلا ثبت شده است'}, status=status.HTTP_400_BAD_REQUEST)
+
+            # ایجاد کاربر جدید
+            private_person_data = data.get('privatePerson', {})
+            new_user = User(
+                username=uniqueIdentifier,
+                email=data.get('email'),
+                is_active=True,
+                first_name=private_person_data.get('firstName'),
+                last_name=private_person_data.get('lastName'),
+                mobile=data.get('mobile'),
+                gender='M' if private_person_data.get('gender') == 'Male' else 'F' if private_person_data.get('gender') == 'Female' else None,
+                birth_date=parse_date(private_person_data.get('birthDate')),
+                created_at=parse_date(data.get('createdAt')),
+                updated_at=parse_date(data.get('updatedAt')),
+                address=data['addresses'][0].get('remnantAddress') if data.get('addresses') and len(data['addresses']) > 0 else None,
+                status=True if data.get('status') == 'Sejami' else False,
+                uniqueIdentifier=uniqueIdentifier,
+                seri_shenasname=private_person_data.get('seriSh'),
+                seri_shenasname_char=private_person_data.get('seriShChar'),
+                serial_shenasname=private_person_data.get('serial'),
+                place_of_birth=private_person_data.get('placeOfBirth'),
+                place_of_issue=private_person_data.get('placeOfIssue'),
+                father_name=private_person_data.get('fatherName'),
+                is_sejam_registered=data.get('is_sejam_registered',True),
+            )
+            new_user.set_password(uniqueIdentifier)
+            new_user.save()
+            if data.get('is_sejam_registered') == False:
+                return Response({'message': 'کاربر با موفقیت ثبت شد'}, status=status.HTTP_200_OK)
+
+            # ذخیره اطلاعات سهامداران حقوقی
+            if data.get('legalPersonStakeholders'):
+                for stakeholder_data in data['legalPersonStakeholders']:
+                    new_stakeholder = legalPersonStakeholders(
+                        user=new_user,
+                        uniqueIdentifier=stakeholder_data['uniqueIdentifier'],
+                        type=stakeholder_data['type'],
+                        start_at=stakeholder_data['startAt'],
+                        position_type=stakeholder_data['positionType'],
+                        last_name=stakeholder_data['lastName'],
+                        is_owner_signature=stakeholder_data['isOwnerSignature'],
+                        first_name=stakeholder_data['firstName'],
+                        end_at=stakeholder_data['endAt']
+                    )
+                    new_stakeholder.save()
+
+            # ذخیره اطلاعات شخص حقوقی
+            if data.get('legalPerson'):
+                legal_person_data = data['legalPerson']
+                new_legal_person = LegalPerson(
+                    user=new_user,
+                    company_name=legal_person_data['companyName'],
+                    citizenship_country=legal_person_data['citizenshipCountry'],
+                    economic_code=legal_person_data['economicCode'],
+                    evidence_expiration_date=legal_person_data['evidenceExpirationDate'],
+                    evidence_release_company=legal_person_data['evidenceReleaseCompany'],
+                    evidence_release_date=legal_person_data['evidenceReleaseDate'],
+                    legal_person_type_sub_category=legal_person_data['legalPersonTypeSubCategory'],
+                    register_date=legal_person_data['registerDate'],
+                    legal_person_type_category=legal_person_data['legalPersonTypeCategory'],
+                    register_place=legal_person_data['registerPlace'],
+                    register_number=legal_person_data['registerNumber']
+                )
+                new_legal_person.save()
+
+            # ذخیره اطلاعات سهامداران
+            if data.get('legalPersonShareholders'):
+                for shareholder_data in data['legalPersonShareholders']:
+                    new_shareholder = legalPersonShareholders(
+                        user=new_user,
+                        uniqueIdentifier=shareholder_data['uniqueIdentifier'],
+                        postal_code=shareholder_data['postalCode'],
+                        position_type=shareholder_data['positionType'],
+                        percentage_voting_right=shareholder_data['percentageVotingRight'],
+                        first_name=shareholder_data['firstName'],
+                        last_name=shareholder_data['lastName'],
+                        address=shareholder_data['address']
+                    )
+                    new_shareholder.save()
+
+            # ذخیره اطلاعات حساب‌های بانکی
+            if data.get('accounts'):
+                for account_data in data['accounts']:
+                    new_account = Accounts(
+                        user=new_user,
+                        account_number=account_data['accountNumber'],
+                        bank=account_data['bank']['name'],
+                        branch_code=account_data['branchCode'],
+                        branch_name=account_data['branchName'],
+                        is_default=account_data['isDefault'],
+                        type=account_data['type'],
+                        sheba_number=account_data['sheba']
+                    )
+                    new_account.save()
+
+            # ذخیره اطلاعات آدرس‌ها
+            if data.get('addresses'):
+                for address_data in data['addresses']:
+                    new_address = Addresses(
+                        user=new_user,
+                        alley=address_data['alley'],
+                        city=address_data['city']['name'],
+                        city_prefix=address_data['cityPrefix'],
+                        country=address_data['country']['name'],
+                        country_prefix=address_data['countryPrefix'],
+                        email=address_data['email'],
+                        emergency_tel=address_data['emergencyTel'],
+                        emergency_tel_city_prefix=address_data['emergencyTelCityPrefix'],
+                        emergency_tel_country_prefix=address_data['emergencyTelCountryPrefix'],
+                        fax=address_data['fax'],
+                        fax_prefix=address_data['faxPrefix'],
+                        plaque=address_data['plaque'],
+                        postal_code=address_data['postalCode'],
+                        province=address_data['province']['name'],
+                        remnant_address=address_data['remnantAddress'],
+                        section=address_data['section']['name'],
+                        tel=address_data['tel']
+                    )
+                    new_address.save()
+
+            # ذخیره اطلاعات شغلی
+            if data.get('jobInfo'):
+                job_data = data['jobInfo']
+                new_job = JobInfo(
+                    user=new_user,
+                    company_address=job_data.get('companyAddress'),
+                    company_city_prefix=job_data.get('companyCityPrefix'),
+                    company_email=job_data.get('companyEmail'),
+                    company_fax=job_data.get('companyFax'),
+                    company_fax_prefix=job_data.get('companyFaxPrefix'),
+                    company_name=job_data.get('companyName'),
+                    company_phone=job_data.get('companyPhone'),
+                    company_postal_code=job_data.get('companyPostalCode'),
+                    company_web_site=job_data.get('companyWebSite'),
+                    employment_date=job_data.get('employmentDate'),
+                    job_title=job_data.get('job', {}).get('title'),
+                    job_description=job_data.get('jobDescription'),
+                    position=job_data.get('position')
+                )
+                new_job.save()
+
+            # ذخیره اطلاعات نماینده
+            if data.get('agent'):
+                agent_data = data['agent']
+                new_agent = AgentUser(
+                    user=new_user,
+                    description=agent_data.get('description'),
+                    expiration_date=agent_data.get('expirationDate'),
+                    first_name=agent_data.get('firstName'),
+                    is_confirmed=agent_data.get('isConfirmed'),
+                    last_name=agent_data.get('lastName'),
+                    type=agent_data.get('type'),
+                    father_uniqueIdentifier=agent_data.get('uniqueIdentifier')
+                )
+                new_agent.save()
+
+            return Response({
+                'message': 'داده‌های سجام با موفقیت پردازش شدند'
+            }, status=status.HTTP_201_CREATED)
+
+        except Exception as e:
+            return Response({
+                'message': f'خطا در پردازش داده‌های سجام: {str(e)}'
+            }, status=status.HTTP_400_BAD_REQUEST)
+
+

@@ -54,11 +54,33 @@ class Company(models.Model):
         ])
     
     logo = models.ImageField(
-        upload_to='logo/company/',
+        upload_to='company/logo/',
         null=True, blank=True,
         verbose_name="لوگو",
         validators=[FileExtensionValidator(allowed_extensions=['jpg', 'jpeg', 'png', 'svg'])])
     
+    seal = models.ImageField(
+        upload_to='company/seal/',
+        null=True, blank=True,
+        unique=True,
+        verbose_name="مهر تجاری",
+        validators=[FileExtensionValidator(allowed_extensions=['jpg', 'jpeg', 'png', 'svg'])])
+    
+
+    signature = models.ImageField(
+        upload_to='company/signature/',
+        null=True, blank=True,
+        unique=True,
+        verbose_name="امضا",
+        validators=[FileExtensionValidator(allowed_extensions=['jpg', 'jpeg', 'png', 'svg'])])
+    
+    letterhead = models.ImageField(
+        upload_to='company/letterhead/',
+        null=True, blank=True,
+        unique=True,
+        verbose_name="سر برگ",
+        validators=[FileExtensionValidator(allowed_extensions=['jpg', 'jpeg', 'png', 'svg'])])
+
     class Meta:
         verbose_name = "شرکت"
         verbose_name_plural = "شرکت ها"

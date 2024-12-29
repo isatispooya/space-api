@@ -3,6 +3,7 @@ from pathlib import Path
 from dotenv import load_dotenv
 from datetime import timedelta
 
+
 load_dotenv()
 
 BASE_DIR = Path(__file__).resolve().parent.parent
@@ -39,6 +40,13 @@ INSTALLED_APPS = [
     'companies',
     'positions',
     'correspondence',
+    'stock_affairs',
+    'timeflow',
+    'rest_framework_simplejwt.token_blacklist',
+    'core',
+    'payment_gateway',
+    'transactions',
+
 
 ]
 
@@ -61,11 +69,14 @@ REST_FRAMEWORK = {
     'DEFAULT_AUTHENTICATION_CLASSES': (
         'rest_framework_simplejwt.authentication.JWTAuthentication',
     ),
-    'DEFAULT_PERMISSION_CLASSES': [
-        'rest_framework.permissions.IsAuthenticated',
+    'DEFAULT_THROTTLE_CLASSES': [
+        'rest_framework.throttling.AnonRateThrottle',
+        'rest_framework.throttling.UserRateThrottle'
     ],
-    'DEFAULT_PAGINATION_CLASS': 'rest_framework.pagination.PageNumberPagination',
-    'PAGE_SIZE': 10
+    'DEFAULT_THROTTLE_RATES': {
+        'anon': '10000/minute',  # محدودیت برای کاربران ناشناس
+        'user': '10000/minute'  # محدودیت برای کاربران احراز هویت شده
+    }
 }
 
 
@@ -92,8 +103,18 @@ SIMPLE_JWT = {
     'AUTH_HEADER_TYPES': ('Bearer',),
     'USER_ID_FIELD': 'id',
     'USER_ID_CLAIM': 'user_id',
-    'ACCESS_TOKEN_LIFETIME': timedelta(minutes=60),
+    'ACCESS_TOKEN_LIFETIME': timedelta(minutes=240),
     'REFRESH_TOKEN_LIFETIME': timedelta(days=1),
+    'AUTH_TOKEN_CLASSES': (
+        'rest_framework_simplejwt.tokens.AccessToken',
+    ),
+    'BLACKLIST_AFTER_ROTATION': True,
+    'TOKEN_TYPE_CLAIM': 'token_type',
+
+    "ROTATE_REFRESH_TOKENS": True,
+    "ALGORITHM": "HS256",
+    "SIGNING_KEY": SECRET_KEY,
+    "TOKEN_BLACKLIST_ENABLED": True,
 }
 
 
