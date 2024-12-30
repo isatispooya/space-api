@@ -55,6 +55,7 @@ class NotificationService:
         """
         templates = {
             'password_reset': f'اتوماسیون اداری ایساتیس پویا\n فراموشی رمز عبور\n کد: {message}',
+            'set_password': f'اتوماسیون اداری ایساتیس پویا\nرمز عبور شما :\n{message}',
             'notification': f'اتوماسیون اداری ایساتیس پویا\n {message}',
         }
         return templates.get(template, message)
