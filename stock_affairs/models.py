@@ -378,7 +378,7 @@ class Appendices(models.Model):
         max_length=255,
         verbose_name="نام"
     )
-    unused_precedence_process = models.ForeignKey(
+    unused_precedence_process = models.OneToOneField(
         UnusedPrecedenceProcess,
         on_delete=models.CASCADE,
         related_name='appendices',

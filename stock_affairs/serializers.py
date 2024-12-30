@@ -64,7 +64,7 @@ class ProcessDescriptionSerializer(serializers.ModelSerializer):
 
 
 class UnusedPrecedenceProcessSerializer(serializers.ModelSerializer):
-    appendices = AppendicesSerializer(many=True, read_only=True)
+    appendices = AppendicesSerializer(read_only=True)
     company = serializers.StringRelatedField()
     process_description_data = ProcessDescriptionSerializer(source='process_description', read_only=True)
     payment_gateway_data = PaymentGatewaySerializer(source='payment_gateway', read_only=True)
