@@ -9,6 +9,7 @@ class UserLoginLogAPIView(APIView):
     """
     این API گزارش ورود و خروج کاربران را نمایش می‌دهد.
     برای هر روز:
+    - ثبت نام
     - اولین ورود
     - آخرین خروج
     - و جفت‌های ورود-خروج میانی را برمی‌گرداند
@@ -34,6 +35,16 @@ class UserLoginLogAPIView(APIView):
                         'first_login': None,
                         'last_logout': None,
                         'intermediate_logs': []
+                    }
+
+                if log.type == 'register':
+                    result[date_str]['register'] = {
+                        'time': log.time.strftime('%H:%M:%S'),
+                        'id': log.id,
+                        'ip': log.ip_address,
+                        'device': log.device_type,
+                        'browser': log.browser,
+                        'os': log.os_type
                     }
 
                 if log.type == 'login' and result[date_str]['first_login'] is None:
