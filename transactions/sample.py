@@ -1,5 +1,4 @@
 from transactions.sep import SEPOnlinePayment
-from transactions.models import PaymentGateway
 # Example usage:
 sep_client = SEPOnlinePayment()
 token_response = sep_client.request_token(amount=10000, res_num="dfgdfg",cell_number="09011010959")

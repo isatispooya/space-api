@@ -4,7 +4,7 @@ from rest_framework.response import Response
 from rest_framework import status
 from transactions.models import Payment
 from stock_affairs.models import Underwriting
-from payment_gateway.sep import SEPOnlinePayment
+from transactions.sep import SEPOnlinePayment
 from rest_framework.exceptions import ValidationError
 from django.utils import timezone
 
