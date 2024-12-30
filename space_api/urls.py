@@ -11,7 +11,6 @@ urlpatterns = [
     path('admin/', admin.site.urls),
     path('' , include('user.urls')),
     path('' , include('authentication.urls')),
-    path('' , include('access.urls')),
     path('companies/' , include('companies.urls')),
     path('positions/' , include('positions.urls')),
     path('correspondence/', include('correspondence.urls')),
