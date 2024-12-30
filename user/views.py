@@ -124,9 +124,9 @@ class RegisterViewset(APIView):
                     }
                 )
                 new_user = User.objects.get(uniqueIdentifier=data.get('uniqueIdentifier'))
-                new_user.set_password(data.get('uniqueIdentifier'))
+                password = random.randint(100000, 999999)
+                new_user.set_password(str(password))
                 new_user.save()
-                    
             if len(data['legalPersonStakeholders']) > 0:
                     for legalPersonStakeholders_data in data['legalPersonStakeholders'] :
                         new_legalPersonStakeholders = legalPersonStakeholders(
@@ -247,6 +247,9 @@ class RegisterViewset(APIView):
             
             refresh = RefreshToken.for_user(new_user)
             access = str(refresh.access_token)
+            print(new_user.password)
+            notification_service = NotificationService()
+            notification_service.send_sms(to = str(new_user.mobile), message=str(password), template='set_password')
             return Response({'refresh': str(refresh), 'access':access}, status=status.HTTP_200_OK)
 
 
