@@ -109,16 +109,20 @@ jobs:
             python3 manage.py migrate stock_affairs zero
             python3 manage.py makemigrations stock_affairs --verbosity 3
             python3 manage.py migrate stock_affairs --verbosity 3
-
+            
+            python3 manage.py migrate timeflow zero
             python3 manage.py makemigrations timeflow --verbosity 3
             python3 manage.py migrate timeflow --verbosity 3
 
+            python3 manage.py migrate core zero
             python3 manage.py makemigrations core --verbosity 3
             python3 manage.py migrate core --verbosity 3
 
+            python3 manage.py migrate correspondence zero
             python3 manage.py makemigrations correspondence --verbosity 3
             python3 manage.py migrate correspondence --verbosity 3
 
+            python3 manage.py migrate authentication zero
             python3 manage.py makemigrations authentication --verbosity 3
             python3 manage.py migrate authentication --verbosity 3
             
