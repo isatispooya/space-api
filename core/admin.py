@@ -11,6 +11,7 @@ class AnnouncementAdmin(admin.ModelAdmin):
         ('اطلاعات اصلی', {
             'fields': ['title' , 'description' , 'picture' , 'link' , 'is_active']
         }),
+
     ]
 
 
@@ -22,6 +23,8 @@ class ShortCutAdmin(admin.ModelAdmin):
     readonly_fields = ['created_at', 'updated_at']
     fieldsets = [
         ('اطلاعات اصلی', {
+
             'fields': ['title' , 'link' , 'is_active' , 'picture']
         })
+
     ]

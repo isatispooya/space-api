@@ -205,7 +205,8 @@ class UUid(models.Model):
 class CodeForgotPassword(models.Model):
     user = models.ForeignKey(User, on_delete=models.CASCADE)
     code = models.CharField(max_length=6)
-    expire = models.DateTimeField(null=True, blank=True)
-    status = models.BooleanField(default=True)
+    expire = models.DateTimeField()
+    status = models.BooleanField(default=False)
+
 
 

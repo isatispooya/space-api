@@ -73,7 +73,7 @@ class IsUnusedPrecedenceProcess(BasePermission):
     def has_permission(self, request, view):
         if request.user.is_staff:
             return True
-        unused_precedence_process = UnusedPrecedenceProcess.objects.filter(is_active=True, used_amount__gt=0)
+        unused_precedence_process = UnusedPrecedenceProcess.objects.filter(is_active=True)
         return unused_precedence_process.exists()
 
 

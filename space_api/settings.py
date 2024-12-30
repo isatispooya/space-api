@@ -11,11 +11,12 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 AUTH_USER_MODEL = 'user.User'
 
 
-SECRET_KEY = os.getenv('SECRET_KEY')
+SECRET_KEY = "JQ_081PCdOvbHfaKInG6996boObSBOobsmSNj-UoB-L_VvJEpIb_J_vsKfVTTAYHanDJOb"
+
 
 DEBUG = True#os.getenv('DEBUG', 'False') == 'True'
 
-ALLOWED_HOSTS = os.getenv('ALLOWED_HOSTS', '').split(',')
+ALLOWED_HOSTS = ['localhost', '127.0.0.1', '31.40.4.92', 'spaceapi.isatispooya.com','*']
 
 CORS_ALLOW_ALL_ORIGINS = True
 

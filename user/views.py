@@ -20,7 +20,8 @@ from utils.legal import is_legal_person
 from rest_framework_simplejwt.tokens import RefreshToken 
 import random
 from utils.notification_service import NotificationService
-
+import logging
+logger = logging.getLogger(__name__)
 
 # otp sejam
 class OtpSejamViewset(APIView):
@@ -46,10 +47,14 @@ class OtpSejamViewset(APIView):
             "uniqueIdentifier": uniqueIdentifier
             })
             headers = {
-            'X-API-KEY': os.getenv('X-API-KEY'),
+            'X-API-KEY': "zH7n^K8s#D4qL!rV9tB@2xEoP1W%0uNc" ,#os.getenv('X-API-KEY','zH7n^K8s#D4qL!rV9tB@2xEoP1W%0uNc'),
             'Content-Type': 'application/json'
             }
             response = requests.request("POST", url, headers=headers, data=payload)
+
+            logger.info(f"uniqueIdentifier: {uniqueIdentifier}")
+            logger.info(f"response content: {response.content}")  
+            logger.info(f"status code: {response.status_code}")
             if response.status_code >=300 :
                 return Response ({'message' :'شما سجامی نیستید'} , status=status.HTTP_400_BAD_REQUEST)
             return Response ({'registered' :False , 'message' : 'کد تایید ارسال شد'},status=status.HTTP_200_OK)
@@ -76,7 +81,7 @@ class RegisterViewset(APIView):
             "otp": otp
             })
             headers = {
-            'X-API-KEY': os.getenv('X-API-KEY'),
+            'X-API-KEY':'zH7n^K8s#D4qL!rV9tB@2xEoP1W%0uNc', #os.getenv('X-API-KEY'),
             'Content-Type': 'application/json'
             }
             response = requests.request("POST", url, headers=headers, data=payload)

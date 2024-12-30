@@ -9,6 +9,7 @@ jobs:
     runs-on: ubuntu-latest
     env:
       SSH_PRIVATE_KEY: ${{ secrets.SSH_PRIVATE_KEY }}
+      DJANGO_SECRET_KEY: ${{ secrets.DJANGO_SECRET_KEY }}
       SERVER_USER: "root"
       SERVER_HOST: "31.40.4.92"
       SERVER_PORT: "2233"
@@ -25,13 +26,40 @@ jobs:
           chmod 600 ~/.ssh/id_rsa
           ssh-keyscan -p $SERVER_PORT -H $SERVER_HOST >> ~/.ssh/known_hosts
 
-      - name: Clean and Clone Repository
+      - name: Backup Media Files and Clean Repository
         run: |
           ssh -p $SERVER_PORT $SERVER_USER@$SERVER_HOST "
+            # پشتیبان‌گیری از فایل‌های media
+            if [ -d \"$SERVER_DIR/media\" ]; then
+              mkdir -p /tmp/media_backup
+              cp -r $SERVER_DIR/media/* /tmp/media_backup/
+            fi
+            
+            # پاک کردن و کلون کردن مخزن
             rm -rf $SERVER_DIR
             mkdir -p $SERVER_DIR
             cd $SERVER_DIR
             git clone https://github.com/isatispooya/space-api.git . || { echo 'Git clone failed'; exit 1; }
+            
+            # بازگرداندن فایل‌های media
+            if [ -d \"/tmp/media_backup\" ]; then
+              mkdir -p $SERVER_DIR/media
+              cp -r /tmp/media_backup/* $SERVER_DIR/media/
+              rm -rf /tmp/media_backup
+            fi
+          "
+
+      - name: Setup Environment Variables
+        run: |
+          ssh -p $SERVER_PORT $SERVER_USER@$SERVER_HOST "
+            cd $SERVER_DIR
+            echo DEBUG=False > .env
+            echo ALLOWED_HOSTS=localhost,127.0.0.1,31.40.4.92,spaceapi.isatispooya.com,* >> .env
+            echo DB_NAME='${{ secrets.DB_NAME }}' >> .env
+            echo DB_USER='${{ secrets.DB_USER }}' >> .env
+            echo DB_PASSWORD='${{ secrets.DB_PASSWORD }}' >> .env
+            echo DB_HOST=localhost >> .env
+            echo DB_PORT=5432 >> .env
           "
 
       - name: Install Dependencies
@@ -40,6 +68,7 @@ jobs:
             cd $SERVER_DIR
             apt-get update && apt-get install -y python3-pip
             python3 -m pip install --upgrade pip
+            python3 -m pip install python-dotenv
             python3 -m pip install -r requirements.txt --root-user-action=ignore
           "
 
@@ -47,10 +76,53 @@ jobs:
         run: |
           ssh -p $SERVER_PORT $SERVER_USER@$SERVER_HOST "
             cd $SERVER_DIR
-            find . -path '*/migrations/*.py' -not -name '__init__.py' -delete
-            find . -path '*/migrations/*.pyc' -delete
-            python3 manage.py makemigrations
-            python3 manage.py migrate --fake-initial
+            
+            # بررسی وضعیت PostgreSQL
+            echo 'Checking PostgreSQL status...'
+            systemctl is-active postgresql || systemctl start postgresql
+            sleep 5  # صبر برای اطمینان از راه‌اندازی کامل PostgreSQL
+            
+            # ایجاد مجدد دیتابیس
+            echo 'Recreating database...'
+            psql -U \"${{ secrets.DB_USER }}\" -c \"DROP DATABASE IF EXISTS \\\"${{ secrets.DB_NAME }}\\\";\"
+            psql -U \"${{ secrets.DB_USER }}\" -c \"CREATE DATABASE \\\"${{ secrets.DB_NAME }}\\\";\"
+            
+            # ساخت و اجرای مایگریشن‌ها
+            echo 'Making and applying migrations...'
+            python3 manage.py makemigrations user --verbosity 3
+            python3 manage.py migrate user --verbosity 3
+
+            python3 manage.py makemigrations companies --verbosity 3
+            python3 manage.py migrate companies --verbosity 3
+
+            python3 manage.py makemigrations positions --verbosity 3
+            python3 manage.py migrate positions --verbosity 3
+
+            python3 manage.py makemigrations payment_gateway --verbosity 3
+            python3 manage.py migrate payment_gateway --verbosity 3
+
+            python3 manage.py makemigrations transactions --verbosity 3
+            python3 manage.py migrate transactions --verbosity 3
+
+            python3 manage.py makemigrations stock_affairs --verbosity 3
+            python3 manage.py migrate stock_affairs --verbosity 3
+
+            python3 manage.py makemigrations timeflow --verbosity 3
+            python3 manage.py migrate timeflow --verbosity 3
+
+            python3 manage.py makemigrations core --verbosity 3
+            python3 manage.py migrate core --verbosity 3
+            
+            # اجرای سایر مایگریشن‌ها
+            python3 manage.py migrate --verbosity 3
+            
+            # بررسی وضعیت جداول
+            echo 'Verifying database tables...'
+            psql -U \"${{ secrets.DB_USER }}\" -d \"${{ secrets.DB_NAME }}\" -c '\\dt core_*'
+            
+            # نمایش وضعیت مایگریشن‌ها
+            echo 'Migration status:'
+            python3 manage.py showmigrations core
           "
 
       - name: Setup Static Files
@@ -58,7 +130,7 @@ jobs:
           ssh -p $SERVER_PORT $SERVER_USER@$SERVER_HOST "
             cd $SERVER_DIR
             mkdir -p static media static_files
-            python3 manage.py collectstatic --noinput
+            python3 manage.py collectstatic --noinput --clear
           "
 
       - name: Set Permissions
