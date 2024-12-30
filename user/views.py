@@ -411,6 +411,7 @@ class UserViewset(APIView):
         user = request.user
         user = User.objects.all()
         user_serializer = UserSerializer(user, many=True)
+        print(user_serializer.data)
         return Response(user_serializer.data,status=status.HTTP_200_OK)
     
 
@@ -659,8 +660,9 @@ class UserUpdateProfileImageViewset(APIView):
     
     def patch(self, request):
         user = request.user
-        user_serializer = UserSerializer(user).data
         if request.FILES.get('profile_image'):
             user.profile_image = request.FILES.get('profile_image')
+            print(user.profile_image)
             user.save()
+        user_serializer = UserSerializer(user).data
         return Response(user_serializer, status=status.HTTP_200_OK)
