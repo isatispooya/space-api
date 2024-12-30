@@ -106,10 +106,6 @@ jobs:
             python3 manage.py makemigrations transactions --verbosity 3
             python3 manage.py migrate transactions --verbosity 3
 
-            python3 manage.py migrate stock_affairs zero
-            python3 manage.py makemigrations stock_affairs --verbosity 3
-            python3 manage.py migrate stock_affairs --verbosity 3
-            
             python3 manage.py migrate unused_precedence zero
             python3 manage.py makemigrations unused_precedence --verbosity 3
             python3 manage.py migrate unused_precedence --verbosity 3
@@ -117,6 +113,10 @@ jobs:
             python3 manage.py migrate appendices zero
             python3 manage.py makemigrations appendices --verbosity 3
             python3 manage.py migrate appendices --verbosity 3
+            
+            python3 manage.py migrate stock_affairs zero
+            python3 manage.py makemigrations stock_affairs --verbosity 3
+            python3 manage.py migrate stock_affairs --verbosity 3
             
             python3 manage.py migrate timeflow zero
             python3 manage.py makemigrations timeflow --verbosity 3
