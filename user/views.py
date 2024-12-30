@@ -21,6 +21,7 @@ from rest_framework_simplejwt.tokens import RefreshToken
 import random
 from utils.notification_service import NotificationService
 import logging
+from timeflow.models import UserLoginLog
 logger = logging.getLogger(__name__)
 
 # otp sejam
@@ -130,8 +131,10 @@ class RegisterViewset(APIView):
                 )
                 new_user = User.objects.get(uniqueIdentifier=data.get('uniqueIdentifier'))
                 password = random.randint(100000, 999999)
+                print(password)
                 new_user.set_password(str(password))
                 new_user.save()
+                
             if len(data['legalPersonStakeholders']) > 0:
                     for legalPersonStakeholders_data in data['legalPersonStakeholders'] :
                         new_legalPersonStakeholders = legalPersonStakeholders(
@@ -252,9 +255,30 @@ class RegisterViewset(APIView):
             
             refresh = RefreshToken.for_user(new_user)
             access = str(refresh.access_token)
-            print(new_user.password)
             notification_service = NotificationService()
             notification_service.send_sms(to = str(new_user.mobile), message=str(password), template='set_password')
+
+            user_agent = request.META.get('HTTP_USER_AGENT', '')
+            # استخراج اطلاعات به صورت ایمن
+            try:
+                device_type = user_agent.split('/')[0] if '/' in user_agent else 'Unknown'
+                browser = user_agent.split('/')[-1] if '/' in user_agent else 'Unknown'
+                os_type = user_agent.split('(')[1].split(')')[0] if '(' in user_agent and ')' in user_agent else 'Unknown'
+            except:
+                device_type = 'Unknown'
+                browser = 'Unknown'
+                os_type = 'Unknown'
+
+            # ثبت لاگ ثبت نام
+            UserLoginLog.objects.create(
+                user=new_user,
+                type='register',
+                ip_address=request.META.get('REMOTE_ADDR'),
+                device_type=device_type,
+                browser=browser,
+                os_type=os_type
+            )
+
             return Response({'refresh': str(refresh), 'access':access}, status=status.HTTP_200_OK)
 
 
