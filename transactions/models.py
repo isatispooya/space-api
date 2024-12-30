@@ -1,5 +1,4 @@
 from django.db import models
-from payment_gateway.models import PaymentGateway
 from django.utils import timezone
 from companies.models import Company
 
