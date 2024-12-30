@@ -4,8 +4,7 @@ from django.utils import timezone
 from user.models import User
 from django.core.exceptions import ValidationError
 from rest_framework.exceptions import ValidationError
-from payment_gateway.models import PaymentGateway
-from transactions.models import Payment
+from transactions.models import PaymentGateway , Payment
 
 class Shareholders(models.Model):
     user = models.ForeignKey(

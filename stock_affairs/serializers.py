@@ -2,8 +2,8 @@ from rest_framework import serializers
 from .models import Shareholders , StockTransfer , Precedence , CapitalIncreasePayment , DisplacementPrecedence , Underwriting , UnusedPrecedenceProcess , Appendices , ProcessDescription
 from companies.serializers import CompanySerializer
 from user.serializers import UserSerializer
-from transactions.serializers import PaymentSerializer
-from payment_gateway.serializers import PaymentGatewaySerializer
+from transactions.serializers import PaymentSerializer , PaymentGatewaySerializer
+
 class ShareholdersSerializer(serializers.ModelSerializer):
     company_detail = CompanySerializer(source='company', read_only=True)
     user_detail = UserSerializer(source='user', read_only=True)

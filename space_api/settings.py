@@ -45,7 +45,6 @@ INSTALLED_APPS = [
     'timeflow',
     'rest_framework_simplejwt.token_blacklist',
     'core',
-    'payment_gateway',
     'transactions',
 
 

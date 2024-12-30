@@ -15,7 +15,7 @@ from rest_framework.exceptions import ValidationError
 from django.db.models import Sum
 from rest_framework.views import APIView
 import uuid
-from payment_gateway.sep import SEPOnlinePayment
+from transactions.sep import SEPOnlinePayment
 from rest_framework.response import Response
 from rest_framework.generics import get_object_or_404
 from transactions.models import Payment
