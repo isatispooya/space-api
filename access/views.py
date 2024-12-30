@@ -51,6 +51,7 @@ class PermissionListForUserView(APIView):
         perm_data_precedence = precedence_perm.get_permission_data(request, self)
         perm_data_shareholder = shareholder_perm.get_permission_data(request, self)
         perm_data_underwriting = underwriting_perm.get_permission_data(request, self)
+        
         permissions = list(permissions)
         if perm_data_unused_precedence_process:
             permissions.append(perm_data_unused_precedence_process)
