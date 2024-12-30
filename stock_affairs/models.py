@@ -334,6 +334,104 @@ class UnusedPrecedenceProcess(models.Model):
         blank=True , 
         verbose_name="درگاه پرداخت"
     )
+    business_plan = models.FileField(
+        upload_to='stock_affairs/business_plans/',
+        null=True , 
+        blank=True , 
+        verbose_name="فایل طرح کسب و کار" 
+    )
+    business_plan_description = models.TextField(
+        null=True , 
+        blank=True , 
+        verbose_name="توضیحات طرح کسب و کار"
+    )
+    business_plan_regulator = models.CharField(
+        max_length=255,
+        null=True , 
+        blank=True , 
+        verbose_name="نام تنظیم کننده طرح کسب و کار"
+    )
+    business_plan_regulator_logo = models.FileField(
+        upload_to='stock_affairs/business_plan_regulator_logos/',
+        null=True , 
+        blank=True , 
+        verbose_name="لوگو تنظیم کننده طرح کسب و کار"
+    )
+    progress_plan = models.FileField(
+        upload_to='stock_affairs/progress_plan/',
+        null=True , 
+        blank=True , 
+        verbose_name="فایل پیشرفت طرح کسب و کار"
+    )
+    progress_plan_description = models.TextField(
+        null=True , 
+        blank=True , 
+        verbose_name="توضیحات پیشرفت طرح کسب و کار"
+    )
+    progress_plan_regulator = models.CharField(
+        max_length=255,
+        null=True , 
+        blank=True , 
+        verbose_name="نام تنظیم کننده پیشرفت طرح کسب و کار"
+    )
+    progress_plan_regulator_logo = models.FileField(
+        upload_to='stock_affairs/progress_plan_regulator_logos/',
+        null=True , 
+        blank=True , 
+        verbose_name="لوگو تنظیم کننده پیشرفت طرح کسب و کار"
+    )
+    validation = models.FileField(
+        upload_to='stock_affairs/validation/',
+        null=True , 
+        blank=True , 
+        verbose_name="فایل اعتبار سنجی طرح کسب و کار"
+    )
+    validation_description = models.TextField(
+        null=True , 
+        blank=True , 
+        verbose_name="توضیحات اعتبار سنجی طرح کسب و کار"
+    )
+    validation_regulator = models.CharField(
+        max_length=255,
+        null=True , 
+        blank=True , 
+        verbose_name="نام تنظیم کننده اعتبار سنجی طرح کسب و کار"
+    )
+    validation_regulator_logo = models.FileField(
+        upload_to='stock_affairs/validation_regulator_logos/',
+        null=True , 
+        blank=True , 
+        verbose_name="لوگو تنظیم کننده اعتبار سنجی طرح کسب و کار"
+    )
+    share_expert = models.FileField(
+        upload_to='stock_affairs/share_expert/',
+        null=True , 
+        blank=True , 
+        verbose_name="فایل کارشناس سهام"
+    )
+    share_expert_description = models.TextField(
+        null=True , 
+        blank=True , 
+        verbose_name="توضیحات کارشناس سهام"
+    )
+    share_expert_regulator = models.CharField(
+        max_length=255,
+        null=True , 
+        blank=True , 
+        verbose_name="نام تنظیم کننده کارشناس سهام"
+    )
+    share_expert_regulator_logo = models.FileField(
+        upload_to='stock_affairs/share_expert_regulator_logos/',
+        null=True , 
+        blank=True , 
+        verbose_name="لوگو تنظیم کننده کارشناس سهام"
+    )
+    gallery = models.URLField(
+        max_length=1000,
+        null=True,
+        blank=True,
+        verbose_name="گالری"
+    )
     is_active = models.BooleanField(
         default=True , 
         verbose_name="فعال"
