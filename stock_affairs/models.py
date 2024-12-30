@@ -465,6 +465,50 @@ class UnusedPrecedenceProcess(models.Model):
     def __str__(self):
         return f"{self.company}"
 
+class FinancialStatementUnusedPrecedenceProcess(models.Model):
+    unused_precedence_process = models.OneToOneField(
+        UnusedPrecedenceProcess,
+        on_delete=models.CASCADE,
+        related_name='financial_statement',
+        null=True,
+        blank=True,
+        verbose_name="فرایند پذیره نویسی"
+    )
+    title = models.CharField(
+        max_length=255,
+        verbose_name="عنوان"
+    )
+    file = models.FileField(
+        null=True , 
+        blank=True , 
+        upload_to='stock_affairs/financial_statements/',
+        verbose_name="فایل"
+    )
+    link = models.URLField(
+        null=True , 
+        blank=True , 
+        verbose_name="لینک"
+    )
+    created_at = models.DateTimeField(
+        default=timezone.now,
+        verbose_name="تاریخ ایجاد"
+    )
+    updated_at = models.DateTimeField(
+        auto_now=True,
+        verbose_name="تاریخ به‌روزرسانی"
+    )
+
+    class Meta:
+        verbose_name = "صورت های مالی"
+        verbose_name_plural = "صورت های مالی"
+        ordering = ['-created_at']
+        indexes = [
+            models.Index(fields=['created_at']),
+        ]
+
+    def __str__(self):
+        return f"{self.title}"
+
 
 class Appendices(models.Model):
     file = models.FileField(

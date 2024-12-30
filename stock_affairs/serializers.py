@@ -1,5 +1,5 @@
 from rest_framework import serializers
-from .models import Shareholders , StockTransfer , Precedence , CapitalIncreasePayment , DisplacementPrecedence , Underwriting , UnusedPrecedenceProcess , Appendices , ProcessDescription
+from .models import Shareholders , StockTransfer  , FinancialStatementUnusedPrecedenceProcess , Precedence , CapitalIncreasePayment , DisplacementPrecedence , Underwriting , UnusedPrecedenceProcess , Appendices , ProcessDescription
 from companies.serializers import CompanySerializer
 from user.serializers import UserSerializer
 from transactions.serializers import PaymentSerializer , PaymentGatewaySerializer
@@ -51,7 +51,6 @@ class DisplacementPrecedenceSerializer(serializers.ModelSerializer):
         fields = '__all__'
 
 
-
 class AppendicesSerializer(serializers.ModelSerializer):
     class Meta:
         model = Appendices
@@ -62,10 +61,15 @@ class ProcessDescriptionSerializer(serializers.ModelSerializer):
         model = ProcessDescription
         fields = '__all__'
 
+class FinancialStatementUnusedPrecedenceProcessSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = FinancialStatementUnusedPrecedenceProcess
+        fields = '__all__'
 
 class UnusedPrecedenceProcessSerializer(serializers.ModelSerializer):
     appendices = AppendicesSerializer(read_only=True)
     company = serializers.StringRelatedField()
+    financial_statement = FinancialStatementUnusedPrecedenceProcessSerializer(read_only=True)
     process_description_data = ProcessDescriptionSerializer(source='process_description', read_only=True)
     payment_gateway_data = PaymentGatewaySerializer(source='payment_gateway', read_only=True)
 
