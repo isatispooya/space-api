@@ -19,6 +19,9 @@ from transactions.sep import SEPOnlinePayment
 from rest_framework.response import Response
 from rest_framework.generics import get_object_or_404
 from transactions.models import Payment
+from django.shortcuts import get_object_or_404
+from django.db.models import Sum
+
 
 class ShareholdersViewset(viewsets.ModelViewSet):
     queryset = Shareholders.objects.all()
@@ -607,14 +610,14 @@ class CreateUnderwritingViewset(APIView):
             raise ValidationError({"error": "وضعیت جدید الزامی است"})
         
         underwriting = get_object_or_404(Underwriting, id=pk)
-        if underwriting.type == '1':
-            # underwriting.status = new_status
-            underwriting.updated_at = timezone.now()
-            underwriting.save()
-        else:
-            # underwriting.payment.status = new_status
-            underwriting.payment.updated_at = timezone.now()
-            underwriting.payment.save()
+        
+        underwriting.status = new_status
+        underwriting.updated_at = timezone.now()
+        underwriting.save()
+        process = UnusedPrecedenceProcess.objects.get(id=underwriting.process.id)
+        all_underwritings = Underwriting.objects.filter(process=process, status='approved').aggregate(total_amount=Sum('requested_amount'))['total_amount'] or 0
+        process.used_amount = all_underwritings
+        process.save()
         serializer = UnderwritingSerializer(underwriting)
 
         return Response({"message" : "وضعیت خرید با موفقیت به‌روزرسانی شد","data" : serializer.data },  status=status.HTTP_200_OK)

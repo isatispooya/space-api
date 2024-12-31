@@ -7,8 +7,9 @@ from stock_affairs.models import Underwriting
 from transactions.sep import SEPOnlinePayment
 from rest_framework.exceptions import ValidationError
 from django.utils import timezone
-
-
+from django.shortcuts import get_object_or_404
+from django.db.models import Sum
+from stock_affairs.models import UnusedPrecedenceProcess
 # SEP
 class VerfiyTransactionSepView(APIView):
     def post(self, request, uuid):
@@ -40,6 +41,9 @@ class VerfiyTransactionSepView(APIView):
             payment.error =State
             payment.verify_transaction = True
             payment.updated_at = timezone.now()
+            underwriting = get_object_or_404(Underwriting, payment=payment)
+            underwriting.status = 'rejected'
+            underwriting.save()
             payment.save()
 
         elif Status in ['2']:
@@ -59,6 +63,14 @@ class VerfiyTransactionSepView(APIView):
             payment.hashed_cart_number = HashedCardNumber
             payment.track_id = TraceNo
             payment.status = 'approved'
+            underwriting = get_object_or_404(Underwriting, payment=payment)
+            underwriting.status = 'approved'
+            if underwriting.status == 'approved':
+                process = UnusedPrecedenceProcess.objects.get(id=underwriting.process.id)
+                all_underwritings = Underwriting.objects.filter(process=process, status='approved').aggregate(total_amount=Sum('requested_amount'))['total_amount'] or 0
+                process.used_amount = all_underwritings
+                process.save()
+            underwriting.save()
             payment.save()
 
         return redirect(f'http://space.isatispooya.com/paymentresult?success={success}')

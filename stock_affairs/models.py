@@ -292,7 +292,7 @@ class UnusedPrecedenceProcess(models.Model):
         verbose_name=" مقدار کل"
     )
     used_amount = models.BigIntegerField(
-        verbose_name=" مقدار موجود"
+        verbose_name="مقدار استفاده شده"
     )
     price = models.BigIntegerField(
         verbose_name="قیمت"
