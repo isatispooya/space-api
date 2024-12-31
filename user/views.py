@@ -655,18 +655,29 @@ class SejamDataReceiverViewset(APIView):
 
 class UserUpdateProfileImageViewset(APIView):
     permission_classes = [IsAuthenticated]
-    queryset = User.objects.all()
-    serializer_class = UserSerializer
-    def get_permissions(self):
-        if self.request.method == 'PATCH':
-            return [IsAuthenticated()]
-        return super().get_permissions()
     
     def patch(self, request):
         user = request.user
-        if request.FILES.get('profile_image'):
-            user.profile_image = request.FILES.get('profile_image')
-            print(user.profile_image)
+        if not request.FILES.get('avatar'):
+            return Response({'error': 'فایل آواتار وارد نشده است'}, status=status.HTTP_400_BAD_REQUEST)
+        try:
+            # حذف تصویر قبلی اگر وجود داشته باشد
+            if user.profile_image:
+                user.profile_image.delete(save=False)
+                
+            user.profile_image = request.FILES['avatar']
             user.save()
-        user_serializer = UserSerializer(user).data
-        return Response(user_serializer, status=status.HTTP_200_OK)
+            
+            user_serializer = UserSerializer(user).data
+            return Response(
+                {'message': 'تصویر پروفایل با موفقیت بروزرسانی شد', 'data': user_serializer}, 
+                status=status.HTTP_200_OK
+            )
+            
+        except Exception as e:
+            return Response(
+                {'error': f'خطا در بروزرسانی تصویر پروفایل: {str(e)}'}, 
+                status=status.HTTP_400_BAD_REQUEST
+            )
+
+
