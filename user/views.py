@@ -314,36 +314,38 @@ class ForgotPasswordViewset(APIView):
         user = User.objects.filter(uniqueIdentifier=uniqueIdentifier).first()
         mobile = user.mobile
         expire = timezone.now() + timedelta(minutes=10)
-        code_create, created = CodeForgotPassword.objects.update_or_create(user=user,defaults={'code': random.randint(100000, 999999),'expire': expire, 'status': False})
+        exsist_code = CodeForgotPassword.objects.filter(user=user,status=False, expire__gte=timezone.now()).first()
+        if exsist_code:
+            return Response({'error': 'کد تایید قبلا ارسال شده است'}, status=status.HTTP_400_BAD_REQUEST)
+        code_create= CodeForgotPassword.objects.create(
+            user=user,
+            code= random.randint(100000, 999999),
+            expire= expire,
+            status= False)
         serializer = CodeForgotPasswordSerializer(code_create).data
         code = serializer['code']
-
         notification_service = NotificationService()
         notification_service.send_sms(to = str(mobile), message=str(code), template='password_reset')
 
-        if created:
-            code_create.status = True
-            code_create.save()
-            return Response({'message': 'کد تایید ارسال شد'}, status=status.HTTP_200_OK)
-
+        
         return Response({'message': 'کد تایید ارسال شد'}, status=status.HTTP_200_OK)
 
 
     def patch(self, request):
         code = request.data.get('code')
         if not code:
-            return Response({'message': 'کد تایید وارد نشده است'}, status=status.HTTP_400_BAD_REQUEST)
-        
+            return Response({'error': 'کد تایید وارد نشده است'}, status=status.HTTP_400_BAD_REQUEST)
+
         code_obj = CodeForgotPassword.objects .filter(code=code,status=False, expire__gte=timezone.now()).first()
 
         if not code_obj:
-            return Response({'message': 'کد تایید اشتباه است یا منقضی شده است'}, status=status.HTTP_400_BAD_REQUEST)
+            return Response({'error': 'کد تایید اشتباه است یا منقضی شده است'}, status=status.HTTP_400_BAD_REQUEST)
         user = code_obj.user
         new_password = request.data.get('new_password')
         new_password_confirm = request.data.get('new_password_confirm')
         if not new_password or not new_password_confirm or new_password != new_password_confirm:
-            return Response({'message': 'رمز عبور وارد شده با تکرار آن مطابقت ندارد'}, status=status.HTTP_400_BAD_REQUEST)
-
+            return Response({'error': 'رمز عبور وارد شده با تکرار آن مطابقت ندارد'}, status=status.HTTP_400_BAD_REQUEST)
+        
         user.set_password(new_password)
         user.last_password_change = timezone.now()
         user.save()
