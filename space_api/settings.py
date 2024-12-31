@@ -193,8 +193,13 @@ SESSION_COOKIE_SECURE = os.getenv('DEBUG', 'False') != 'True'
 # }
 
 # اضافه کردن STATICFILES_DIRS برای پوشه‌های استاتیک اضافی
+STATIC_URL = '/static/'
+STATIC_ROOT = os.path.join(BASE_DIR, 'static')
 STATICFILES_DIRS = [
     os.path.join(BASE_DIR, 'static_files'),
 ]
 
+MEDIA_URL = '/media/'
+MEDIA_ROOT = os.path.join(BASE_DIR, 'media')
 
+DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
