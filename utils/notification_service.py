@@ -10,7 +10,7 @@ class NotificationService:
             'from': os.getenv('SMS_FROM'),
             'username': os.getenv('SMS_USERNAME'),
             'password': os.getenv('SMS_PASSWORD'),
-            'url': os.getenv('SMS_URL')
+            'url': os.getenv('SMS_URL' , 'http://tsms.ir/url/tsmshttp.php')
         }
 
         self.email_config = email_config
@@ -28,14 +28,14 @@ class NotificationService:
             message = self._apply_template(template, message)
             
         params = {
-            'from': self.sms_from,
+            'from': self.sms_config['from'],
             'to': to,
-            'username': self.sms_username,
-            'password': self.sms_password,
+            'username': self.sms_config['username'],
+            'password': self.sms_config['password'],
             'message': message
         }
         
-        response = requests.get(url=self.sms_url, params=params)
+        response = requests.get(url=self.sms_config['url'], params=params)
         return response.json()
     
     def _apply_template(self, template: str, message: str) -> str:
