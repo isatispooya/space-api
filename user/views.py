@@ -94,6 +94,8 @@ class RegisterViewset(APIView):
             if data == None :
                 return Response({'message' :'بیشتر تلاش کن '}, status=status.HTTP_400_BAD_REQUEST)
             new_user = User.objects.filter(uniqueIdentifier=uniqueIdentifier).first()
+            if new_user :
+                return Response({'message' :'شما قبلا ثبت نام کرده اید'}, status=status.HTTP_400_BAD_REQUEST)
             private_person_data = data['privatePerson']
             if not new_user :
                
