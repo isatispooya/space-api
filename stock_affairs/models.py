@@ -241,29 +241,35 @@ class DisplacementPrecedence(models.Model):
 
 
 
-class ProcessDescription(models.Model):
+
+class UnusedPrecedenceProcess(models.Model):
+    company = models.ForeignKey(
+        Company, 
+        on_delete=models.CASCADE,
+        verbose_name="شرکت"
+    )
     description = models.TextField(
-        null=True , 
-        blank=True , 
+        null=True, 
+        blank=True, 
         verbose_name="توضیحات"
     )
-    picture = models.ImageField(
+    description_title = models.CharField(
+        max_length=255,
+        null=True , 
+        blank=True , 
+        verbose_name="عنوان توضیحات"
+    )
+    description_picture = models.ImageField(
         upload_to='stock_affairs/process_description/',
         null=True , 
         blank=True , 
-        verbose_name="تصویر"
+        verbose_name="تصویر توضیحات"
     )
-    title = models.CharField(
+    description_location = models.CharField(
         max_length=255,
         null=True , 
         blank=True , 
-        verbose_name="عنوان"
-    )
-    location = models.CharField(
-        max_length=255,
-        null=True , 
-        blank=True , 
-        verbose_name="مکان"
+        verbose_name="مکان توضیحات"
     )
     contact_number = models.CharField(
         max_length=255,
@@ -281,32 +287,7 @@ class ProcessDescription(models.Model):
         blank=True , 
         verbose_name="لینک تلگرام"
     )
-    created_at = models.DateTimeField(
-        default=timezone.now,
-        verbose_name="تاریخ ایجاد"
-    )
-    updated_at = models.DateTimeField(
-        auto_now=True,
-        verbose_name="تاریخ به‌روزرسانی"
-    )
-    class Meta:
-        verbose_name = "توضیحات فرایند"
-        verbose_name_plural = "توضیحات فرایند"
-        ordering = ['-created_at']
-        indexes = [
-            models.Index(fields=['created_at']),
-        ]
-    
-    def __str__(self):
-        return f"{self.title}"
 
-
-class UnusedPrecedenceProcess(models.Model):
-    company = models.ForeignKey(
-        Company, 
-        on_delete=models.CASCADE,
-        verbose_name="شرکت"
-    )
     total_amount = models.BigIntegerField(
         verbose_name=" مقدار کل"
     )
@@ -316,12 +297,10 @@ class UnusedPrecedenceProcess(models.Model):
     price = models.BigIntegerField(
         verbose_name="قیمت"
     )
-    process_description = models.ForeignKey(
-        ProcessDescription,
-        on_delete=models.CASCADE,
+    agreement_text = models.TextField(
         null=True , 
         blank=True , 
-        verbose_name="توضیحات فرایند"
+        verbose_name="متن موافقت نامه"
     )
     agreement = models.BooleanField(
         default=True , 
