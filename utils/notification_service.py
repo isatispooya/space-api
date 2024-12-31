@@ -4,25 +4,14 @@ import os
 
 
 class NotificationService:
-    def __init__(self, sms_config: dict = None, email_config: Optional[dict] = None):
+    def __init__(self, email_config: Optional[dict] = None):
         # استفاده از کانفیگ پیش‌فرض
-        if sms_config is None:
-            # اینجا باید مقدار پیش‌فرض را از تنظیمات جانگو یا محیط بگیرید
-            default_config = {
-                'from': os.getenv('SMS_FROM'),
-                'username': os.getenv('SMS_USERNAME'),
-                'password': os.getenv('SMS_PASSWORD'),
-                'url': os.getenv('SMS_URL')
-            }
-            sms_config = default_config
-
-        if isinstance(sms_config, dict):
-            self.sms_from = sms_config.get('from')
-            self.sms_username = sms_config.get('username')
-            self.sms_password = sms_config.get('password')
-            self.sms_url = sms_config.get('url')
-        else:
-            raise ValueError("sms_config باید یک دیکشنری معتبر باشد")
+        self.sms_config = {
+            'from': os.getenv('SMS_FROM'),
+            'username': os.getenv('SMS_USERNAME'),
+            'password': os.getenv('SMS_PASSWORD'),
+            'url': os.getenv('SMS_URL')
+        }
 
         self.email_config = email_config
 
