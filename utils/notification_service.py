@@ -7,9 +7,9 @@ class NotificationService:
     def __init__(self, email_config: Optional[dict] = None):
         # استفاده از کانفیگ پیش‌فرض
         self.sms_config = {
-            'from': os.getenv('SMS_FROM'),
-            'username': os.getenv('SMS_USERNAME'),
-            'password': os.getenv('SMS_PASSWORD'),
+            'from': os.getenv('SMS_FROM' , '30001526'),
+            'username': os.getenv('SMS_USERNAME' , 'isatispooya'),
+            'password': os.getenv('SMS_PASSWORD' , '5246043adeleh'),
             'url': os.getenv('SMS_URL' , 'http://tsms.ir/url/tsmshttp.php')
         }
 
@@ -34,9 +34,16 @@ class NotificationService:
             'password': self.sms_config['password'],
             'message': message
         }
-        
-        response = requests.get(url=self.sms_config['url'], params=params)
-        return response.json()
+        try:
+            response = requests.get(url=self.sms_config['url'], params=params)
+            response.raise_for_status()  # بررسی خطاهای HTTP
+            return response.json()
+        except requests.RequestException as e:
+            print(e)
+            return {
+                'success': False,
+                'error': str(e)
+            }
     
     def _apply_template(self, template: str, message: str) -> str:
         """
