@@ -445,7 +445,7 @@ class UnusedPrecedenceProcess(models.Model):
         return f"{self.company}"
 
 class FinancialStatementUnusedPrecedenceProcess(models.Model):
-    unused_precedence_process = models.OneToOneField(
+    unused_precedence_process = models.ForeignKey(
         UnusedPrecedenceProcess,
         on_delete=models.CASCADE,
         related_name='financial_statement',
