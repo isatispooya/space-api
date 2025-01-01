@@ -543,9 +543,9 @@ class CreateUnderwritingViewset(APIView):
             value = amount * process.price
         except (ValueError, TypeError):
             raise ValidationError({"error": "مقدار amount باید عددی صحیح باشد"})
-
+        unused_amount = process.total_amount - process.used_amount
         # بررسی موجودی
-        if amount > process.used_amount: 
+        if amount > unused_amount: 
             raise ValidationError({"error": "مقدار درخواستی بیشتر از موجودی است"})
 
         invoice_unique_id=str(uuid.uuid4())
