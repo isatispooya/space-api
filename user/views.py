@@ -191,70 +191,112 @@ class RegisterViewset(APIView):
                         type = acounts_data ['type'],
                         sheba_number = acounts_data ['sheba'] ,)
                     new_accounts.save()
-            if len (data['addresses']) > 0 :
-                for addresses_data in data ['addresses']:
-                    new_addresses = Addresses (
+            try :   
+                addresses = data.get('addresses',[])
+                for addresses_data in addresses:
+                    alley = ''
+                    city = ''
+                    city_prefix = ''
+                    country = ''
+                    country_prefix = ''
+                    email = ''
+                    emergency_tel = ''
+                    emergency_tel_city_prefix = ''
+                    emergency_tel_country_prefix = ''
+                    fax = ''
+                    fax_prefix = ''
+                    mobile = ''
+                    plaque = ''
+                    postal_code = ''
+                    province = ''
+                    remnant_address = ''
+                    section = ''
+                    tel = ''
+                    alley = addresses_data.get('alley', '') or ''
+                    if addresses_data.get('city') and isinstance(addresses_data['city'], dict):
+                        city = addresses_data['city'].get('name', '')
+                    city_prefix = addresses_data.get('cityPrefix', '') or ''
+                    if addresses_data.get('country') and isinstance(addresses_data['country'], dict):
+                        country = addresses_data['country'].get('name', '')
+                    country_prefix = addresses_data.get('countryPrefix', '') or ''
+                    email = addresses_data.get('email', '') or ''
+                    emergency_tel = addresses_data.get('emergencyTel', '') or ''
+                    emergency_tel_city_prefix = addresses_data.get('emergencyTelCityPrefix', '') or ''
+                    emergency_tel_country_prefix = addresses_data.get('emergencyTelCountryPrefix', '') or ''
+                    fax = addresses_data.get('fax', '') or ''
+                    fax_prefix = addresses_data.get('faxPrefix', '') or ''
+                    mobile = addresses_data.get('mobile', '') or ''
+                    plaque = addresses_data.get('plaque', '') or ''
+                    postal_code = addresses_data.get('postalCode', '') or ''
+                    province = addresses_data.get('province', {}).get('name', '') or ''
+                    remnant_address = addresses_data.get('remnantAddress', '') or ''
+                    section = addresses_data.get('section', {}).get('name', '') or ''
+                    tel = addresses_data.get('tel', '') or ''
+                    Addresses.objects.create(
                         user = new_user,
-                        alley =  addresses_data ['alley'],
-                        city =  addresses_data ['city']['name'],
-                        city_prefix =  addresses_data ['cityPrefix'],
-                        country = addresses_data ['country']['name'],
-                        country_prefix =  addresses_data ['countryPrefix'],
-                        email =  addresses_data ['email'],
-                        emergency_tel =  addresses_data ['emergencyTel'],
-                        emergency_tel_city_prefix =  addresses_data ['emergencyTelCityPrefix'],
-                        emergency_tel_country_prefix =  addresses_data ['emergencyTelCountryPrefix'],
-                        fax =  addresses_data ['fax'],
-                        fax_prefix =  addresses_data ['faxPrefix'],
-                        plaque =  addresses_data ['plaque'],
-                        postal_code =  addresses_data ['postalCode'],
-                        province =  addresses_data ['province']['name'],
-                        remnant_address =  addresses_data ['remnantAddress'],
-                        section =  addresses_data ['section']['name'],
-                        tel =  addresses_data ['tel'],
-                    )
-                    new_addresses.save()
-                jobInfo_data = data.get('jobInfo')
-                if isinstance(jobInfo_data, dict):
-                    employment_date = request.data.get('employmentDate')
-                    if employment_date is not None:
+                        alley = alley,
+                        city = city,
+                        city_prefix = city_prefix,
+                        country = country,
+                        country_prefix = country_prefix,
+                        email = email,
+                        emergency_tel = emergency_tel,
+                        emergency_tel_city_prefix = emergency_tel_city_prefix,
+                        emergency_tel_country_prefix = emergency_tel_country_prefix,
+                        fax = fax,
+                        fax_prefix = fax_prefix,
+                        mobile = mobile,
+                        plaque = plaque,
+                        postal_code = postal_code,
+                        province = province,
+                        remnant_address = remnant_address,
+                        section = section,
+                        tel = tel,
+                        )
+            except :
+                print('خطا در ثبت اطلاعات اصلی کاربر - آدرس ها')
 
-                        employment_date = employment_date.split('T')[0]  # 1346 the date format
+            jobInfo_data = data.get('jobInfo')
+            if isinstance(jobInfo_data, dict):
+                employment_date = request.data.get('employmentDate')
+                if employment_date is not None:
 
-                    new_jobInfo = JobInfo(
-                        user=new_user,
-                        company_address=jobInfo_data.get('companyAddress', ''),
-                        company_city_prefix=jobInfo_data.get('companyCityPrefix', ''),
-                        company_email=jobInfo_data.get('companyEmail', ''),
-                        company_fax=jobInfo_data.get('companyFax', ''),
-                        company_fax_prefix=jobInfo_data.get('companyFaxPrefix', ''),
-                        company_name=jobInfo_data.get('companyName', ''),
-                        company_phone=jobInfo_data.get('companyPhone', ''),
-                        company_postal_code=jobInfo_data.get('companyPostalCode', ''),
-                        company_web_site=jobInfo_data.get('companyWebSite', ''),
-                        employment_date=employment_date,
-                        job_title=jobInfo_data.get('job', {}).get('title', ''),
-                        job_description=jobInfo_data.get('jobDescription', ''),
-                        position=jobInfo_data.get('position', ''),
-                    )
+                    employment_date = employment_date.split('T')[0]  # 1346 the date format
 
-                    new_jobInfo.save()
-                agent = data.get('agent')
-                if isinstance(agent, dict):
-                    new_agent = AgentUser(
-                        user=new_user,
-                        description=new_agent.get('description', ''),
-                        expiration_date=new_agent.get('expirationDate', ''),
-                        first_name=new_agent.get('firstName', ''),
-                        is_confirmed=new_agent.get('isConfirmed', ''),
-                        last_name=new_agent.get('lastName', ''),
-                        type=new_agent.get('type', ''),
-                        father_uniqueIdentifier=new_agent.get('uniqueIdentifier', ''),
-     
-                    )
+                new_jobInfo = JobInfo(
+                    user=new_user,
+                    company_address=jobInfo_data.get('companyAddress', ''),
+                    company_city_prefix=jobInfo_data.get('companyCityPrefix', ''),
+                    company_email=jobInfo_data.get('companyEmail', ''),
+                    company_fax=jobInfo_data.get('companyFax', ''),
+                    company_fax_prefix=jobInfo_data.get('companyFaxPrefix', ''),
+                    company_name=jobInfo_data.get('companyName', ''),
+                    company_phone=jobInfo_data.get('companyPhone', ''),
+                    company_postal_code=jobInfo_data.get('companyPostalCode', ''),
+                    company_web_site=jobInfo_data.get('companyWebSite', ''),
+                    employment_date=employment_date,
+                    job_title=jobInfo_data.get('job', {}).get('title', ''),
+                    job_description=jobInfo_data.get('jobDescription', ''),
+                    position=jobInfo_data.get('position', ''),
+                )
 
-                    new_agent.save()
-            
+                new_jobInfo.save()
+            agent = data.get('agent')
+            if isinstance(agent, dict):
+                new_agent = AgentUser(
+                    user=new_user,
+                    description=new_agent.get('description', ''),
+                    expiration_date=new_agent.get('expirationDate', ''),
+                    first_name=new_agent.get('firstName', ''),
+                    is_confirmed=new_agent.get('isConfirmed', ''),
+                    last_name=new_agent.get('lastName', ''),
+                    type=new_agent.get('type', ''),
+                    father_uniqueIdentifier=new_agent.get('uniqueIdentifier', ''),
+    
+                )
+
+                new_agent.save()
+        
             refresh = RefreshToken.for_user(new_user)
             access = str(refresh.access_token)
             notification_service = NotificationService()
