@@ -363,24 +363,58 @@ class UnusedPrecedenceProcess(models.Model):
         upload_to='stock_affairs/validation/',
         null=True , 
         blank=True , 
-        verbose_name="فایل اعتبار سنجی طرح کسب و کار"
+        verbose_name="فایل اعتبار سنجی بانکی"
     )
     validation_description = models.TextField(
         null=True , 
         blank=True , 
-        verbose_name="توضیحات اعتبار سنجی طرح کسب و کار"
+        verbose_name="توضیحات اعتبار سنجی بانکی"
     )
     validation_regulator = models.CharField(
         max_length=255,
         null=True , 
         blank=True , 
-        verbose_name="نام تنظیم کننده اعتبار سنجی طرح کسب و کار"
+        verbose_name="نام تنظیم کننده اعتبار سنجی بانکی"
     )
     validation_regulator_logo = models.FileField(
         upload_to='stock_affairs/validation_regulator_logos/',
         null=True , 
         blank=True , 
-        verbose_name="لوگو تنظیم کننده اعتبار سنجی طرح کسب و کار"
+        verbose_name="لوگو تنظیم کننده اعتبار سنجی بانکی"
+    )
+    validation_project = models.FileField(
+        upload_to='stock_affairs/validation_project/',
+        null=True , 
+        blank=True , 
+        verbose_name="فایل اعتبار سنجی پروژه"
+    )
+    validation_project_description = models.TextField(
+        null=True , 
+        blank=True , 
+        verbose_name="توضیحات اعتبار سنجی پروژه"
+    )
+    validation_project_regulator = models.CharField(
+        max_length=255,
+        null=True , 
+        blank=True , 
+        verbose_name="نام تنظیم کننده اعتبار سنجی پروژه"
+    )
+    validation_project_regulator_logo = models.FileField(
+        upload_to='stock_affairs/validation_project_regulator_logos/',
+        null=True , 
+        blank=True , 
+        verbose_name="لوگو تنظیم کننده اعتبار سنجی پروژه"
+    )
+    announcement_underwriting = models.FileField(
+        upload_to='stock_affairs/announcement_underwriting/',
+        null=True , 
+        blank=True , 
+        verbose_name="فایل آگهی پذیره نویسی"
+    )
+    announcement_underwriting_description = models.TextField(
+        null=True , 
+        blank=True , 
+        verbose_name="توضیحات آگهی پذیره نویسی"
     )
     share_expert = models.FileField(
         upload_to='stock_affairs/share_expert/',
