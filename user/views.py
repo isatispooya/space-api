@@ -132,7 +132,7 @@ class RegisterViewset(APIView):
                     }
                 )
                 new_user = User.objects.get(uniqueIdentifier=data.get('uniqueIdentifier'))
-                password = random.randint(100000, 999999)
+                password = random.randint(10000000, 99999999)
                 print(password)
                 new_user.set_password(str(password))
                 new_user.save()
@@ -193,6 +193,7 @@ class RegisterViewset(APIView):
                     new_accounts.save()
             try :   
                 addresses = data.get('addresses',[])
+                print(addresses)
                 for addresses_data in addresses:
                     alley = ''
                     city = ''
