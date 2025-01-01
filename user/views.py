@@ -192,70 +192,36 @@ class RegisterViewset(APIView):
                         sheba_number = acounts_data ['sheba'] ,)
                     new_accounts.save()
             try :   
-                addresses = data.get('addresses',[])
-                print(addresses)
+                addresses = data.get('addresses', [])
                 for addresses_data in addresses:
-                    alley = ''
-                    city = ''
-                    city_prefix = ''
-                    country = ''
-                    country_prefix = ''
-                    email = ''
-                    emergency_tel = ''
-                    emergency_tel_city_prefix = ''
-                    emergency_tel_country_prefix = ''
-                    fax = ''
-                    fax_prefix = ''
-                    mobile = ''
-                    plaque = ''
-                    postal_code = ''
-                    province = ''
-                    remnant_address = ''
-                    section = ''
-                    tel = ''
-                    alley = addresses_data.get('alley', '') or ''
-                    if addresses_data.get('city') and isinstance(addresses_data['city'], dict):
-                        city = addresses_data['city'].get('name', '')
-                    city_prefix = addresses_data.get('cityPrefix', '') or ''
-                    if addresses_data.get('country') and isinstance(addresses_data['country'], dict):
-                        country = addresses_data['country'].get('name', '')
-                    country_prefix = addresses_data.get('countryPrefix', '') or ''
-                    email = addresses_data.get('email', '') or ''
-                    emergency_tel = addresses_data.get('emergencyTel', '') or ''
-                    emergency_tel_city_prefix = addresses_data.get('emergencyTelCityPrefix', '') or ''
-                    emergency_tel_country_prefix = addresses_data.get('emergencyTelCountryPrefix', '') or ''
-                    fax = addresses_data.get('fax', '') or ''
-                    fax_prefix = addresses_data.get('faxPrefix', '') or ''
-                    mobile = addresses_data.get('mobile', '') or ''
-                    plaque = addresses_data.get('plaque', '') or ''
-                    postal_code = addresses_data.get('postalCode', '') or ''
-                    province = addresses_data.get('province', {}).get('name', '') or ''
-                    remnant_address = addresses_data.get('remnantAddress', '') or ''
-                    section = addresses_data.get('section', {}).get('name', '') or ''
-                    tel = addresses_data.get('tel', '') or ''
+                    # دریافت مقادیر از دیکشنری‌های تو در تو
+                    city_name = addresses_data.get('city', {}).get('name', '')
+                    province_name = addresses_data.get('province', {}).get('name', '')
+                    section_name = addresses_data.get('section', {}).get('name', '')
+                    
                     Addresses.objects.create(
-                        user = new_user,
-                        alley = alley,
-                        city = city,
-                        city_prefix = city_prefix,
-                        country = country,
-                        country_prefix = country_prefix,
-                        email = email,
-                        emergency_tel = emergency_tel,
-                        emergency_tel_city_prefix = emergency_tel_city_prefix,
-                        emergency_tel_country_prefix = emergency_tel_country_prefix,
-                        fax = fax,
-                        fax_prefix = fax_prefix,
-                        mobile = mobile,
-                        plaque = plaque,
-                        postal_code = postal_code,
-                        province = province,
-                        remnant_address = remnant_address,
-                        section = section,
-                        tel = tel,
-                        )
-            except :
-                print('خطا در ثبت اطلاعات اصلی کاربر - آدرس ها')
+                        user=new_user,
+                        alley=addresses_data.get('alley', ''),
+                        city=city_name,
+                        city_prefix=addresses_data.get('cityPrefix', ''),
+                        country=addresses_data.get('country', {}).get('name', ''),
+                        country_prefix=addresses_data.get('countryPrefix', ''),
+                        email=addresses_data.get('email', ''),
+                        emergency_tel=addresses_data.get('emergencyTel', ''),
+                        emergency_tel_city_prefix=addresses_data.get('emergencyTelCityPrefix', ''),
+                        emergency_tel_country_prefix=addresses_data.get('emergencyTelCountryPrefix', ''),
+                        fax=addresses_data.get('fax', ''),
+                        fax_prefix=addresses_data.get('faxPrefix', ''),
+                        plaque=addresses_data.get('plaque', ''),
+                        postal_code=addresses_data.get('postalCode', ''),
+                        province=province_name,
+                        remnant_address=addresses_data.get('remnantAddress', ''),
+                        section=section_name,
+                        tel=addresses_data.get('tel', '')
+                    )
+                    logger.info(f"Address created successfully for user {new_user.uniqueIdentifier}")
+            except Exception as e:
+                logger.error(f"Error creating address for user {new_user.uniqueIdentifier}: {str(e)}")
 
             jobInfo_data = data.get('jobInfo')
             if isinstance(jobInfo_data, dict):
