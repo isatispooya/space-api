@@ -36,11 +36,11 @@ class OtpSejamViewset(APIView):
 
         captcha = captcha.check_response(encrypted_response, request.data['captcha'])
         if request.data['captcha'] == ''  or not captcha :
-            pass#return Response ({'message' : 'کد کپچا خالی است'} , status=status.HTTP_400_BAD_REQUEST)
+            pass#return Response ({'error' : 'کد کپچا خالی است'} , status=status.HTTP_400_BAD_REQUEST)
 
         uniqueIdentifier = request.data['uniqueIdentifier']
         if not uniqueIdentifier :
-            return Response ({'message' : 'کد ملی را وارد کنید'} , status=status.HTTP_400_BAD_REQUEST)
+            return Response ({'error' : 'کد ملی را وارد کنید'} , status=status.HTTP_400_BAD_REQUEST)
         user = User.objects.filter (uniqueIdentifier = uniqueIdentifier,is_sejam_registered=True).first()
         if not user:
             url = "http://31.40.4.92:8870/otp"
@@ -57,10 +57,10 @@ class OtpSejamViewset(APIView):
             logger.info(f"response content: {response.content}")  
             logger.info(f"status code: {response.status_code}")
             if response.status_code >=300 :
-                return Response ({'message' :'شما سجامی نیستید'} , status=status.HTTP_400_BAD_REQUEST)
+                return Response ({'error' :'شما سجامی نیستید'} , status=status.HTTP_400_BAD_REQUEST)
             return Response ({'registered' :False , 'message' : 'کد تایید ارسال شد'},status=status.HTTP_200_OK)
 
-        return Response({'message' : 'شما قبلا ثبت نام کرده اید'},status=status.HTTP_400_BAD_REQUEST)   
+        return Response({'error' : 'شما قبلا ثبت نام کرده اید'},status=status.HTTP_400_BAD_REQUEST)   
                 
 
 # register  user's account for new user
@@ -73,7 +73,7 @@ class RegisterViewset(APIView):
         user = None
 
         if not uniqueIdentifier or not otp:
-            return Response({'message': 'کد ملی و کد تأیید الزامی است'}, status=status.HTTP_400_BAD_REQUEST)
+            return Response({'error': 'کد ملی و کد تأیید الزامی است'}, status=status.HTTP_400_BAD_REQUEST)
         
         if not user :
             url = "http://31.40.4.92:8870/information"
@@ -90,12 +90,12 @@ class RegisterViewset(APIView):
             try :
                 data = response['data']
             except:
-                return Response({'message' :'1دوباره تلاش کن '}, status=status.HTTP_400_BAD_REQUEST)
+                return Response({'error' :'1دوباره تلاش کن '}, status=status.HTTP_400_BAD_REQUEST)
             if data == None :
-                return Response({'message' :'بیشتر تلاش کن '}, status=status.HTTP_400_BAD_REQUEST)
+                return Response({'error' :'بیشتر تلاش کن '}, status=status.HTTP_400_BAD_REQUEST)
             new_user = User.objects.filter(uniqueIdentifier=uniqueIdentifier).first()
             if new_user :
-                return Response({'message' :'شما قبلا ثبت نام کرده اید'}, status=status.HTTP_400_BAD_REQUEST)
+                return Response({'error' :'شما قبلا ثبت نام کرده اید'}, status=status.HTTP_400_BAD_REQUEST)
             private_person_data = data['privatePerson']
             if not new_user :
                
@@ -336,11 +336,11 @@ class ChangePasswordViewset(APIView):
         new_password = request.data.get('new_password')
         new_password_confirm = request.data.get('new_password_confirm')
         if not last_password or not new_password or not new_password_confirm:
-            return Response({'message': 'اطلاعات وارد شده نادرست است'}, status=status.HTTP_400_BAD_REQUEST)
+            return Response({'error': 'اطلاعات وارد شده نادرست است'}, status=status.HTTP_400_BAD_REQUEST)
         if new_password != new_password_confirm:
-            return Response({'message': 'رمز عبور وارد شده با تکرار آن مطابقت ندارد'}, status=status.HTTP_400_BAD_REQUEST)
+            return Response({'error': 'رمز عبور وارد شده با تکرار آن مطابقت ندارد'}, status=status.HTTP_400_BAD_REQUEST)
         if not user.check_password(last_password):
-            return Response({'message': 'رمز عبور قبلی وارد شده اشتباه است'}, status=status.HTTP_400_BAD_REQUEST)
+            return Response({'error': 'رمز عبور قبلی وارد شده اشتباه است'}, status=status.HTTP_400_BAD_REQUEST)
         user.set_password(new_password)
         user.last_password_change = timezone.now()
         user.save()
@@ -524,11 +524,11 @@ class SejamDataReceiverViewset(APIView):
             data = request.data
             uniqueIdentifier = data.get('uniqueIdentifier')
             if not uniqueIdentifier:
-                return Response({'message': 'شناسه یکتا وجود ندارد'}, status=status.HTTP_400_BAD_REQUEST)
+                return Response({'error': 'شناسه یکتا وجود ندارد'}, status=status.HTTP_400_BAD_REQUEST)
 
             # چک کردن وجود یوزر
             if User.objects.filter(uniqueIdentifier=uniqueIdentifier).exists():
-                return Response({'message': 'کاربر قبلا ثبت شده است'}, status=status.HTTP_400_BAD_REQUEST)
+                return Response({'error': 'کاربر قبلا ثبت شده است'}, status=status.HTTP_400_BAD_REQUEST)
 
             # ایجاد کاربر جدید
             private_person_data = data.get('privatePerson', {})
@@ -691,7 +691,7 @@ class SejamDataReceiverViewset(APIView):
 
         except Exception as e:
             return Response({
-                'message': f'خطا در پردازش داده‌های سجام: {str(e)}'
+                'error': f'خطا در پردازش داده‌های سجام: {str(e)}'
             }, status=status.HTTP_400_BAD_REQUEST)
 
 
