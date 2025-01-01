@@ -279,13 +279,15 @@ class CapitalIncreasePaymentViewset(viewsets.ModelViewSet):
         total_previous_payments = CapitalIncreasePayment.objects.filter(
             precedence=precedence
         ).aggregate(total=models.Sum('amount'))['total'] or 0
-
+        
         # اگر در حال آپدیت هستیم، مقدار فعلی را از مجموع کم می‌کنیم
         if instance:
             total_previous_payments -= instance.amount
-
+        total_amount_procress = UnusedPrecedenceProcess.objects.filter(
+            precedence=precedence
+        ).aggregate(total=models.Sum('price'))['total'] or 0
         # محاسبه مقدار باقی‌مانده
-        remaining_precedence = precedence.precedence - total_previous_payments
+        remaining_precedence = total_amount_procress  - total_previous_payments 
 
         # بررسی اینکه آیا مقدار درخواستی از باقی‌مانده بیشتر است
         if new_amount > remaining_precedence:
