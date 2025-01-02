@@ -290,6 +290,7 @@ class RegisterViewset(APIView):
                 browser=browser,
                 os_type=os_type
             )
+            
             Notification.objects.create(
                 user=new_user,
                 title='خوش اومدید',

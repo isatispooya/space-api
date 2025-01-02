@@ -1,4 +1,3 @@
-from django.shortcuts import render
 from rest_framework.views import APIView
 from rest_framework.response import Response
 from rest_framework import status
@@ -80,6 +79,6 @@ class InvitationView(APIView):
             code_data = InvitationCodeSerializer(code).data
             code_data['invitations'] = InvitationSerializer(invitations, many=True).data
             result.append(code_data)
-        
+
         return Response(result)
     
