@@ -22,6 +22,7 @@ import random
 from utils.notification_service import NotificationService
 import logging
 from timeflow.models import UserLoginLog
+from marketing.models import Notification
 logger = logging.getLogger(__name__)
 
 # otp sejam
@@ -288,6 +289,12 @@ class RegisterViewset(APIView):
                 device_type=device_type,
                 browser=browser,
                 os_type=os_type
+            )
+            Notification.objects.create(
+                user=new_user,
+                title='خوش اومدید',
+                message=f'{new_user.username} به ایساتیس من خوش اومدید',
+                tag='register',
             )
 
             return Response({'refresh': str(refresh), 'access':access}, status=status.HTTP_200_OK)
