@@ -1,5 +1,6 @@
 from django.db import models
 from django.contrib.auth.models import User
+from django.conf import settings
 
 
 class InvitationCode(models.Model):
@@ -11,9 +12,9 @@ class InvitationCode(models.Model):
         verbose_name='کد دعوت'
     )
     introducer_user = models.ForeignKey(
-        User,
+        settings.AUTH_USER_MODEL,
         on_delete=models.CASCADE,
-        verbose_name='دعوت کننده'
+        related_name='invitation_codes'
     )
     description = models.TextField(
         verbose_name='توضیحات',
@@ -43,9 +44,9 @@ class Invitation(models.Model):
         verbose_name='کد دعوت'
     )
     invited_user = models.ForeignKey(
-        User,
+        settings.AUTH_USER_MODEL,
         on_delete=models.CASCADE,
-        verbose_name='کاربر دعوت شده'
+        related_name='invitations'
     )
     created_at = models.DateTimeField(
         auto_now_add=True,
