@@ -66,7 +66,7 @@ class FinancialStatementUnusedPrecedenceProcessSerializer(serializers.ModelSeria
 class UnusedPrecedenceProcessSerializer(serializers.ModelSerializer):
     appendices = AppendicesSerializer(read_only=True)
     company = serializers.StringRelatedField()
-    financial_statement = FinancialStatementUnusedPrecedenceProcessSerializer(read_only=True)
+    financial_statement = FinancialStatementUnusedPrecedenceProcessSerializer(many=True,read_only=True)
     payment_gateway_data = PaymentGatewaySerializer(source='payment_gateway', read_only=True)
 
     class Meta:
