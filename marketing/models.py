@@ -64,3 +64,19 @@ class Invitation(models.Model):
         return f'{self.invited_user.username} - {self.invitation_code.code}'
 
 
+class Notification(models.Model):
+    user = models.ForeignKey(User, on_delete=models.CASCADE, verbose_name='کاربر')
+    title = models.CharField(max_length=255, verbose_name='عنوان')
+    tag = models.CharField(max_length=255, verbose_name='تگ',blank=True,null=True)
+    message = models.TextField(verbose_name='متن')
+    read = models.BooleanField(default=False, verbose_name='خوانده شده')
+    created_at = models.DateTimeField(auto_now_add=True, verbose_name='تاریخ ایجاد')
+    updated_at = models.DateTimeField(auto_now=True, verbose_name='تاریخ بروزرسانی')
+
+    class Meta:
+        verbose_name = 'اعلان'
+        verbose_name_plural = 'اعلان ها'
+
+    def __str__(self):
+        return self.title
+
