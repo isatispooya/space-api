@@ -73,7 +73,7 @@ class VerfiyTransactionSepView(APIView):
             underwriting.save()
             payment.save()
 
-        return redirect(f'http://space.isatispooya.com/paymentresult?success={success}')
+        return redirect(f'http://my.isatispooya.com/paymentresult?success={success}')
         
         
 
