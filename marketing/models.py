@@ -65,7 +65,11 @@ class Invitation(models.Model):
 
 
 class Notification(models.Model):
-    user = models.ForeignKey(User, on_delete=models.CASCADE, verbose_name='کاربر')
+    user = models.ForeignKey(
+        settings.AUTH_USER_MODEL,
+        on_delete=models.CASCADE,
+        verbose_name='کاربر'
+    )
     title = models.CharField(max_length=255, verbose_name='عنوان')
     tag = models.CharField(max_length=255, verbose_name='تگ',blank=True,null=True)
     message = models.TextField(verbose_name='متن')
