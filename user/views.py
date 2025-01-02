@@ -22,7 +22,8 @@ import random
 from utils.notification_service import NotificationService
 import logging
 from timeflow.models import UserLoginLog
-from marketing.models import Notification
+from marketing.models import Notification, InvitationCode, Invitation
+from marketing.serializers import NotificationSerializer, InvitationCodeSerializer, InvitationSerializer
 logger = logging.getLogger(__name__)
 
 # otp sejam
@@ -72,6 +73,7 @@ class RegisterViewset(APIView):
         uniqueIdentifier = request.data.get('uniqueIdentifier')
         otp = request.data.get('otp')
         user = None
+        invitation_code = request.data.get('referral')
 
         if not uniqueIdentifier or not otp:
             return Response({'error': 'کد ملی و کد تأیید الزامی است'}, status=status.HTTP_400_BAD_REQUEST)
@@ -290,13 +292,27 @@ class RegisterViewset(APIView):
                 browser=browser,
                 os_type=os_type
             )
-            
+
+
             Notification.objects.create(
                 user=new_user,
                 title='خوش اومدید',
                 message=f'{new_user.username} به ایساتیس من خوش اومدید',
                 tag='register',
             )
+            if invitation_code:
+                invitation_code = InvitationCode.objects.filter(code=invitation_code).first()
+                if invitation_code:
+                    Invitation.objects.create(
+                        invitation_code=invitation_code,
+                        invited_user=new_user,
+                    )
+                    Notification.objects.create(
+                        user=invitation_code.user,
+                        title='دعوت',
+                        message=f'{new_user.first_name} {new_user.last_name} به ایساتیس من دعوت شد',
+                        tag='invitation',
+                    )
 
             return Response({'refresh': str(refresh), 'access':access}, status=status.HTTP_200_OK)
 
